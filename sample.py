@@ -288,7 +288,7 @@ def create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,file
     except Exception as e:
         print(f"Error creating primary output and shortcuts: {e}")
 
-#def increment_version(version_string):
+def increment_version(version_string):
     """
     Increments the version string.
 
@@ -306,7 +306,8 @@ def create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,file
 
 
 
-def get_initial_version_from_file(filepath):
+def get_initial_version_of_assembly_file(filepath):
+
     """
     Reads the initial version from the specified file.
 
@@ -330,12 +331,13 @@ def get_initial_version_from_file(filepath):
 
 # Example usage:
 assembly_version_file_path = r"C:\Venkatesh\Data-FEB-2024\Mirafra-Learning\Task\script\Psemi_2024-0.55.0_D1\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\Properties\AssemblyInfo.cs"
-assembly_version = get_initial_version_from_file(assembly_version_file_path)
+assembly_version = get_initial_version_of_assembly_file(assembly_version_file_path)
 
 if assembly_version:
-    print("Initial version:", assembly_version)
+    print("assembly_version:", assembly_version)
 else:
     print("Failed to retrieve initial version.")
+
 
 def update_version_in_file(filepath, version_string):
     """
@@ -598,8 +600,7 @@ def main(vsCodePath, filePath):
         
         get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow)
         filepath = r"C:\Venkatesh\Data-FEB-2024\Mirafra-Learning\Task\script\Psemi_2024-0.55.0_D1\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\Properties\AssemblyInfo.cs"
-        get_initial_version_from_file(filepath)
-        
+        get_initial_version_of_assembly_file(filepath)
         # build_process_in_release_mode(muRataAppInVSCode)
         # update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWindow)
 

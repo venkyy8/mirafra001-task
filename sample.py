@@ -405,19 +405,19 @@ def change_version_in_assembly_info(solutionExplorerWindow, muRataAppInVSCode):
         time.sleep(1)
 
         # Path to the file containing the initial version
-        file_path = r"C:\Venkatesh\Data-FEB-2024\Mirafra-Learning\Task\script\Psemi_2024-0.55.0_D1\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\Properties\AssemblyInfo.cs"
+        assembly_version_file_path = r"C:\Venkatesh\Data-FEB-2024\Mirafra-Learning\Task\script\Psemi_2024-0.55.0_D1\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\Properties\AssemblyInfo.cs"
 
         # Get the initial version from the file
-        initial_version = get_initial_version_from_file(file_path)
+        initial_version = get_initial_version_of_assembly_file(assembly_version_file_path)
 
         if initial_version:
             print(f"Initial version: {initial_version}")
 
             # Increment the version
-            new_version = increment_versionInFile(initial_version)
+            new_version = increment_version(initial_version)
 
             # Update the version in the file
-            update_version_in_file(file_path, new_version)
+            update_version_in_file(assembly_version_file_path, new_version)
     except Exception as e:
         print(f"Error changing version in AssemblyInfo.cs file: {e}")
 

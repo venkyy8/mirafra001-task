@@ -337,27 +337,6 @@ if assembly_version:
 else:
     print("Failed to retrieve initial version.")
 
-
-def increment_versionInFile(version_string):
-    """
-    Increments the version string.
-
-    Args:
-        version_string: The version string to increment.
-
-    Returns:
-        The incremented version string.
-    """
-    major, minor, patch, hotfix = map(int, version_string.split("."))
-    patch += 1
-
-    # # Reset patch and increment minor version if patch reaches 11
-    # if patch == 11:
-    #     patch = 0
-    #     minor += 1
-
-    return f"{major}.{minor}.{patch}.{hotfix}"
-
 def update_version_in_file(filepath, version_string):
     """
     Updates the version number in the specified file.

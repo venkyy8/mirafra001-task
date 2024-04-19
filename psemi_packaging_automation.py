@@ -499,14 +499,16 @@ def install_muRata_studio_setup(solutionMuRataAppWindow):
         solutionMuRataAppWindow.child_window(title="muRataStudioSetup", control_type="TreeItem").right_click_input()
         for _ in range(5):
             pyautogui.press("down")
+        time.sleep(1)
         pyautogui.press("enter")
-        fileExplorer=Application(backend="uia").connect(title="muRataStudioSetup")
-        muRataStudioSetupInFileExplorer=fileExplorer.MuRataStudioSetup
-        muRataStudioSetupInFileExplorer.Release.double_click_input()
-        fileExplorer=Application(backend="uia").connect(title="Release")
-        releaseFolderInFileExplorer=fileExplorer.Release
-        releaseFolderInFileExplorer.set_focus()
-        releaseFolderInFileExplorer.child_window(title="muRataStudioSetup",  control_type="ListItem").double_click_input()
+        # fileExplorer=Application(backend="uia").connect(title="muRataStudioSetup")
+        # time.sleep(5)
+        # muRataStudioSetupInFileExplorer=fileExplorer.MuRataStudioSetup
+        # muRataStudioSetupInFileExplorer.Release.double_click_input()
+        # fileExplorer=Application(backend="uia").connect(title="Release")
+        # releaseFolderInFileExplorer=fileExplorer.Release
+        # releaseFolderInFileExplorer.set_focus()
+        # releaseFolderInFileExplorer.child_window(title="muRataStudioSetup",  control_type="ListItem").double_click_input()
 
         time.sleep(1)
         muRataStudioWindow=Application(backend="uia").connect(title="muRata Studio")
@@ -536,7 +538,7 @@ def install_muRata_studio_setup(solutionMuRataAppWindow):
 
 def muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow):
     try:
-        build_solutionAtLast(muRataAppInVSCode)
+        # build_solutionAtLast(muRataAppInVSCode)
         install_muRata_studio_setup(solutionMuRataAppWindow)
 
     except Exception as e:
@@ -558,8 +560,8 @@ def main(vscodePath, filePath):
         solutionMuRataAppWindow=solutionExplorerWindow.child_window(title="Solution 'muRata.Applications' ‎(20 of 20 projects)", control_type="TreeItem")
 
 
-        build_process_in_release_mode(muRataAppInVSCode)
-        update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWindow)
+        #build_process_in_release_mode(muRataAppInVSCode)
+        #update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWindow)
 
         ### Capturing Window
         fileSystemWindow=muRataAppInVSCode.child_window(title="File System (muRataStudioSetup)", auto_id="D:0:0:|File System (muRataStudioSetup)||{00000000-0000-0000-0000-000000000000}|", control_type="Pane")
@@ -569,11 +571,11 @@ def main(vscodePath, filePath):
         ### Capturing Window
         applicationFolder=fileSystemWindow.child_window(title="Application Folder", control_type="TreeItem")
 
-        delete_primary_output_and_shortcuts(fileSystemWindow,muRataAppInVSCode,applicationFolder)
+        #delete_primary_output_and_shortcuts(fileSystemWindow,muRataAppInVSCode,applicationFolder)
 
-        create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,fileSystemWindow )
+        #create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,fileSystemWindow )
 
-        change_version(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow)
+       # change_version(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow)
 
         muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow)
 

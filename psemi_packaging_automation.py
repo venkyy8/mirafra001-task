@@ -7,7 +7,16 @@ import pyautogui
 import pyperclip
 import re
 ### ###
-
+# Global paths
+vsCodePath = r"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe"
+sourceFolder1 = r"C:\Venkatesh\Data-FEB-2024\Mirafra-Learning\Task\script\Psemi_2024-0.55.0_D1\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Debug\Devices"
+sourceFolder2 = r"C:\Venkatesh\Data-FEB-2024\Mirafra-Learning\Task\script\Psemi_2024-0.55.0_D1\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Debug\Plugins"
+destinationFolder = r"C:\Venkatesh\Data-FEB-2024\Mirafra-Learning\Task\script\Psemi_2024-0.55.0_D1\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Release"
+devicesFolderOfRelease = r"C:\Venkatesh\Data-FEB-2024\Mirafra-Learning\Task\script\Psemi_2024-0.55.0_D1\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Release\Devices"
+pluginsFolderOfRelease = r"C:\Venkatesh\Data-FEB-2024\Mirafra-Learning\Task\script\Psemi_2024-0.55.0_D1\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Release\Plugins"
+solutionFilePath = r"C:\Venkatesh\Data-FEB-2024\Mirafra-Learning\Task\script\Psemi_2024-0.55.0_D1\Psemi_2024-0.55.0_D1\muratastudio\Solutions\muRata.Applications\muRata.Applications.sln"
+assemblyInfoFilePath = r"C:\Venkatesh\Data-FEB-2024\Mirafra-Learning\Task\script\Psemi_2024-0.55.0_D1\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\Properties\AssemblyInfo.cs"
+###
 def build_solution(muRataAppInVSCode):
     try:
             
@@ -65,16 +74,17 @@ def build_process_in_release_mode(muRataAppInVSCode):
         ######################################Laterrrrr ##################
         ### Open Folder in File Explorer ###
         solutionExplorerWindow=muRataAppInVSCode.child_window(title="Solution Explorer", auto_id="SolutionExplorer", control_type="Tree")
-        solutionMuRataAppWindow=solutionExplorerWindow.child_window(title="Solution 'muRata.Applications' ‎(20 of 20 projects)", control_type="TreeItem")
+        #solutionMuRataAppWindow=solutionExplorerWindow.child_window(title="Solution 'muRata.Applications' ‎(20 of 20 projects)", control_type="TreeItem")
+        solutionMuRataAppWindow = solutionExplorerWindow.child_window(title_re=".*muRata.Applications.*", control_type="TreeItem")
         solutionMuRataAppWindow.right_click_input()
 
         ### Copy Devices and Plugins folders from Debug to Release ###
-        sourceFolder1=r"C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Debug\Devices"
-        sourceFolder2=r"C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Debug\Plugins"
+        #sourceFolder1=r"C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Debug\Devices"
+        #sourceFolder2=r"C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Debug\Plugins"
 
-        desinationFolder=r"C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Release"
-        shutil.copytree(sourceFolder1,os.path.join(desinationFolder, os.path.basename(sourceFolder1)))
-        shutil.copytree(sourceFolder2,os.path.join(desinationFolder,os.path.basename(sourceFolder2)))
+        #desinationFolder=r"C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Release"
+        shutil.copytree(sourceFolder1,os.path.join(destinationFolder, os.path.basename(sourceFolder1)))
+        shutil.copytree(sourceFolder2,os.path.join(destinationFolder,os.path.basename(sourceFolder2)))
 
         ### Build Solution ###
         build_solution(muRataAppInVSCode)
@@ -101,8 +111,8 @@ def update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWin
         deleteProcess=muRataAppInVSCode.child_window(title="Microsoft Visual Studio", control_type="Window")
         deleteProcess.YesButton.click_input()
 
-        devicesFolderOfRelease=r"C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Release\Devices"
-        pluginsFolderOfRelease=r"C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Release\Plugins"
+        #devicesFolderOfRelease=r"C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Release\Devices"
+        #pluginsFolderOfRelease=r"C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Release\Plugins"
         explorer=Application(backend="uia").start("explorer.exe")
         fileExplorer = Desktop(backend="uia").window(title='File Explorer')
         fileExplorer.wait('ready', timeout=10)
@@ -129,7 +139,7 @@ def update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWin
         deleteProcess.YesButton.click_input()
 
         # pyautogui.hotkey('ctrl', 'v')
-        pluginsFolderOfRelease=r"C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Release\Plugins"
+        #pluginsFolderOfRelease=r"C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Release\Plugins"
         time.sleep(1)
         explorer=Application(backend="uia").start("explorer.exe")
         fileExplorer = Desktop(backend="uia").window(title='File Explorer')
@@ -544,57 +554,27 @@ def muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow
     except Exception as e:
         print(f"Error in muRataStudio installer packaging: {e}")
         raise
+#################
 
-def main(vscodePath, filePath):
-
+def main():
     try:
         ### Open and Connect with Visual Studio Code ###
-        app=Application(backend="uia").start(vsCodePath + ' ' + filePath )
+        app = Application(backend="uia").start(vsCodePath + ' ' + solutionFilePath)
 
         ### Capturing Window
-        muRataAppInVSCode=app.window(title="muRata.Applications - Microsoft Visual Studio")
+        muRataAppInVSCode = app.window(title="muRata.Applications - Microsoft Visual Studio")
         time.sleep(20)
         
-        solutionExplorerWindow=muRataAppInVSCode.child_window(title="Solution Explorer", control_type="Window")
+        solutionExplorerWindow = muRataAppInVSCode.child_window(title="Solution Explorer", control_type="Window")
         # solutionExplorerWindow=muRataAppInVSCode.child_window(title="Solution Explorer", auto_id="SolutionExplorer", control_type="Tree")
-        solutionMuRataAppWindow=solutionExplorerWindow.child_window(title="Solution 'muRata.Applications' ‎(20 of 20 projects)", control_type="TreeItem")
-
-
-        #build_process_in_release_mode(muRataAppInVSCode)
-        #update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWindow)
-
-        ### Capturing Window
-        fileSystemWindow=muRataAppInVSCode.child_window(title="File System (muRataStudioSetup)", auto_id="D:0:0:|File System (muRataStudioSetup)||{00000000-0000-0000-0000-000000000000}|", control_type="Pane")
-
-        
-
-        ### Capturing Window
-        applicationFolder=fileSystemWindow.child_window(title="Application Folder", control_type="TreeItem")
-
-        #delete_primary_output_and_shortcuts(fileSystemWindow,muRataAppInVSCode,applicationFolder)
-
-        #create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,fileSystemWindow )
-
-       # change_version(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow)
-
-        muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow)
-
+        solutionMuRataAppWindow = solutionExplorerWindow.child_window(title="Solution 'muRata.Applications' ‎(20 of 20 projects)", control_type="TreeItem")
 
     except Exception as e:
-            print(f"An error occurred: {e}")
-            pyautogui.hotkey('ctrl', 'f4')
-            return
-
+        print(f"An error occurred: {e}")
+        pyautogui.hotkey('ctrl', 'f4')
 
 if __name__=="__main__":
-
-    ### Delcare VScode path and File Path ###
-    vsCodePath=r"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe"
-    filePath=r"C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Solutions\muRata.Applications\muRata.Applications.sln"
-
-    file_path_of_assembly_info_cs = r"C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\Properties\AssemblyInfo.cs"
-
-    main (vsCodePath, filePath)
+    main ()
 
 
     ## basePath ask from customer=C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio

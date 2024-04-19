@@ -33,35 +33,6 @@ def build_solution(muRataAppInVSCode):
         raise
 
 
-# def build_solutionAtLast(muRataAppInVSCode):
-#     try:
-            
-#         muRataAppInVSCode.child_window(title="Build", control_type="MenuItem").click_input()
-#         time.sleep(10)
-#         muRataAppInVSCode.child_window(title="Build Solution", control_type="MenuItem").click_input()
-#         # customControl=muRataAppInVSCode.child_window(auto_id="WpfTextViewHost", control_type="Custom")
-#         # buildedResultArea=customControl.child_window(control_type="Edit", found_index=0)
-       
-
-#         ### Capture the output
-#         time.sleep(10)
-#         customControl=muRataAppInVSCode.Output.Custom
-#         buildedResult=customControl.child_window(title_re=".*Build started*.", auto_id="WpfTextView", control_type="Edit").window_text()
-#         print("Output of Build:", buildedResult)
-#         print("response")
-#         # customControl.print_control_identifiers()
-#         muRataAppInVSCode.Output.print_control_identifiers()
-#         time.sleep(10)
-#         # if "0 failed" in buildedResult:
-#         #     print("Build is succeeded")
-#         #     muRataAppInVSCode.Output.CloseButton.click_input()
-#         # else:
-#         #     raise Exception("Build failed. Consider it as an error.")
-#     except Exception as e:
-#         print(f"Error in build solution: {e}")
-#         raise
-
-
 def build_process_in_release_mode(muRataAppInVSCode):
 
     try:
@@ -71,7 +42,7 @@ def build_process_in_release_mode(muRataAppInVSCode):
         ######################################Laterrrrr ##################
         ### Open Folder in File Explorer ###
         solutionExplorerWindow=muRataAppInVSCode.child_window(title="Solution Explorer", auto_id="SolutionExplorer", control_type="Tree")
-        solutionMuRataAppWindow=solutionExplorerWindow.child_window(title="Solution 'muRata.Applications' ‎(20 of 20 projects)", control_type="TreeItem")
+        solutionMuRataAppWindow=solutionExplorerWindow.child_window(title_re=".*Solution 'muRata.Applications'*.", control_type="TreeItem")
         solutionMuRataAppWindow.right_click_input()
 
         ### Copy Devices and Plugins folders from Debug to Release ###
@@ -199,8 +170,8 @@ def create_primary_output_from_muRata(muRataAppInVSCode,applicationFolder):
 
         # Send keys to navigate to "Primary output"
         pyautogui.press('down') 
-        # pyautogui.press('down') # Move down to "Primary output"
-        pyautogui.press('enter')  # Select "Primary output"
+        # pyautogui.press('down') # Move down to "Project output"
+        pyautogui.press('enter')  # Select "Project output"
         time.sleep(1)
     
         addProjectOutputGroup=muRataAppInVSCode.child_window(title="Add Project Output Group", control_type="Window")
@@ -326,23 +297,9 @@ def create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,file
         print(f"Error creating primary output and shortcuts: {e}")
         raise
 
-def increment_version(version_string):
-    """
-    Increments the version string.
-
-    Args:
-        version_string: The version string to increment.
-
-    Returns:
-        The incremented version string.
-    """
-    major, minor, patch = map(int, version_string.split("."))
-    patch += 1
 
 
-    return f"{major}.{minor}.{patch}"
-
-def get_initial_version_from_file(filepath):
+def get_initial_version_from_assembly_info_cs_file(file_path_of_assembly_info_cs):
     """
     Reads the initial version from the specified file.
 
@@ -353,85 +310,109 @@ def get_initial_version_from_file(filepath):
         The initial version string.
     """
     try:
-        with open(filepath, 'r') as file:
+        with open(file_path_of_assembly_info_cs, 'r') as file:
             lines = file.readlines()
             for line in lines:
                 if "AssemblyVersion" in line:
                     version_string = re.search(r'\d+\.\d+\.\d+\.\d+', line)
                     if version_string:
+                        print("Initial Version in Assembly info.cs file", version_string.group() )
                         return version_string.group()
     except Exception as e:
-        print(f"Error reading version from file: {e}")
+        print(f"Error reading version from assembly_info_cs file: {e}")
         raise
     
 
-def increment_versionInFile(version_string):
-    """
-    Increments the version string.
-
-    Args:
-        version_string: The version string to increment.
-
-    Returns:
-        The incremented version string.
-    """
-    major, minor, patch, hotfix = map(int, version_string.split("."))
-    patch += 1
-
-    # # Reset patch and increment minor version if patch reaches 11
-    # if patch == 11:
-    #     patch = 0
-    #     minor += 1
-
-    return f"{major}.{minor}.{patch}.{hotfix}"
-
-def update_version_in_file(filepath, version_string):
+def change_version_in_assembly_info(file_path_of_assembly_info_cs, version_type):
     """
     Updates the version number in the specified file.
 
     Args:
         filepath: The path to the file.
-        version_string: The new version number to be inserted.
+        initial_version: The initial version number.
+        version_type: The type of version to update ("minor" or "patch").
     """
     try:
-        with open(filepath, 'r') as file:
+
+        initial_version = get_initial_version_from_assembly_info_cs_file(file_path_of_assembly_info_cs)
+
+        # Split the initial version into segments
+        version_segments = list(map(int, initial_version.split('.')))
+        
+        # Ensure there are four segments in the version string
+        while len(version_segments) < 4:
+            version_segments.append(0)
+        
+        # Determine which part of the version string to update
+        if version_type == "minor":
+            version_segments[1] += 1
+        elif version_type == "patch":
+            version_segments[2] += 1
+        else:
+            print("Invalid version type. Must be 'minor' or 'patch'.")
+            raise Exception("Invalid version type. Consider as Error")
+        
+        # Construct the updated version string
+        updated_version = '.'.join(map(str, version_segments))
+        
+        with open(file_path_of_assembly_info_cs, 'r') as file:
             lines = file.readlines()
-        with open(filepath, 'w') as file:
+        with open(file_path_of_assembly_info_cs, 'w') as file:
             for line in lines:
                 if "AssemblyVersion" in line or "AssemblyFileVersion" in line:
-                    line = re.sub(r'\d+\.\d+\.\d+\.\d+', version_string, line)
+                    line = re.sub(r'\d+\.\d+\.\d+\.\d+', updated_version, line)
                 file.write(line)
-        print(f"Version number updated to {version_string} in {filepath}")
+        print(f" Updated {version_type.capitalize()} version in Assembly info file is {updated_version}")
     except Exception as e:
-        print(f"Error updating version number in file: {e}")
+        print(f"Error changing version in AssemblyInfo.cs file: {e}")
         raise
 
 
-def change_version_in_assembly_info(solutionExplorerWindow, muRataAppInVSCode):
+
+def change_version_in_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow, version_type):
     try:
-                
+        initial_version = get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow)
 
-        # Path to the file containing the initial version
+        muRataAppInVSCode.type_keys("{F4}")
 
-        # Get the initial version from the file
-        initial_version = get_initial_version_from_file(file_path_of_assembly_info_cs)
+        solutionMuRataAppWindow.child_window(title="muRataStudioSetup", control_type="TreeItem").click_input()
+        time.sleep(10)
 
-        if initial_version:
-            print(f"Initial version: {initial_version}")
+        properties_window = muRataAppInVSCode.child_window(title="Properties", control_type="Window")
+        properties_window.child_window(title="Version", control_type="TreeItem").click_input()
+        properties_window.child_window(title="Version", control_type="Edit").double_click_input()
 
-            # Increment the version
-            new_version = increment_versionInFile(initial_version)
+        major, minor, patch = map(int, initial_version.split("."))
 
-            # Update the version in the file
-            update_version_in_file(file_path_of_assembly_info_cs, new_version)
+        if version_type == "minor":
+            minor += 1
+        elif version_type == "patch":
+            patch += 1
+        else:
+            print("Invalid version type. Must be 'minor' or 'patch'.")
+            return
+
+        new_version = f"{major}.{minor}.{patch}"
+
+        version_edit = properties_window.child_window(title="Version", control_type="Edit")
+        version_edit.type_keys(new_version)
+        print(f" Updated {version_type.capitalize()} version in MuRata Studio Property is {new_version}")
+        time.sleep(1)
+
+        properties_window.CloseButton.click_input()
+        time.sleep(0.5)
+        muRataAppInVSCode.MicrosoftVisualStudio.YesButton.click_input()
+        time.sleep(1)
+        properties_window.CloseButton.click_input()
+
     except Exception as e:
-        print(f"Error changing version in AssemblyInfo.cs file: {e}")
+        print(f"Error changing version in muRata Studio properties: {e}")
         raise
 
 def get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow ):
 
     try:
-               # Open the Properties window using the F4 key shortcut
+        # Open the Properties window using the F4 key shortcut
         muRataAppInVSCode.type_keys("{F4}")
 
         solutionMuRataAppWindow.child_window(title="muRataStudioSetup", control_type="TreeItem").click_input()
@@ -450,7 +431,7 @@ def get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutio
 
         # Retrieve the selected text from the clipboard
         initialVersion = pyperclip.paste()
-        print("initialVersion is", initialVersion)
+        print("Initial Version in MuRata Studio Property is", initialVersion)
         propertiesWindow.CloseButton.click_input()
         return initialVersion
     
@@ -459,49 +440,50 @@ def get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutio
         raise
 
 
-def change_version_in_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow ):
+def compare_versions(assembly_version, initial_version):
+    """
+    Compare the assembly_version with the initial_version,
+    ignoring the last segment of the assembly_version.
+
+    Args:
+        assembly_version: The version obtained from AssemblyInfo.cs.
+        initial_version: The initial version.
+
+    Returns:
+        True if the versions match, False otherwise.
+    """
+    # Split the versions into segments
+    assembly_segments = assembly_version.split('.')
+    initial_segments = initial_version.split('.')
+
+    # Ignore the last segment of the assembly_version
+    assembly_segments = assembly_segments[:-1]
+
+    # Compare the versions
+    if assembly_segments == initial_segments:
+        return True
+    else:
+        return False
+
+def change_version(muRataAppInVSCode, solutionMuRataAppWindow, file_path_of_assembly_info_cs, version_type):
     try:
-        initialVersion=get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow )
-
-        muRataAppInVSCode.type_keys("{F4}")
-
-        solutionMuRataAppWindow.child_window(title="muRataStudioSetup", control_type="TreeItem").click_input()
-        time.sleep(10)
-
-        propertiesWindow=muRataAppInVSCode.child_window(title="Properties", control_type="Window")
-        # propertiesWindow=muRataAppInVSCode.child_window(title="Properties Window", control_type="Table")
-        propertiesWindow.child_window(title="Version", control_type="TreeItem").click_input()
-        propertiesWindow.child_window(title="Version",  control_type="Edit").double_click_input()
-
-        newVersion=increment_version(initialVersion)
-        version=propertiesWindow.child_window(title="Version",  control_type="Edit")
-        version.type_keys(newVersion)
-        print("new version is", newVersion)
-        time.sleep(1)
-
-        propertiesWindow.CloseButton.click_input()
-        time.sleep(0.5)
-        muRataAppInVSCode.MicrosoftVisualStudio.YesButton.click_input()
-        time.sleep(1)
-        propertiesWindow.CloseButton.click_input()
-
-    except Exception as e:
-        print(f"Error changing version in muRata Studio properties: {e}")
-        raise
-
-def change_version(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow):
-    try:
-        solutionExplorerWindow.child_window(title="Collapse All", control_type="Button").click_input()
-        change_version_in_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow )
-        change_version_in_assembly_info(solutionExplorerWindow, muRataAppInVSCode)
+        initial_version = get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow)
+        assembly_version= get_initial_version_from_assembly_info_cs_file(file_path_of_assembly_info_cs)
         
+        if compare_versions(assembly_version, initial_version):
+             change_version_in_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow, version_type)
+             change_version_in_assembly_info(file_path_of_assembly_info_cs, version_type)
+        else:
+            raise Exception("Versions does not match.")
+
     except Exception as e:
         print(f"Error in changing version: {e}")
         raise
 
 
-def install_muRata_studio_setup(solutionMuRataAppWindow):
+def install_muRata_studio_setup(solutionMuRataAppWindow, solutionExplorerWindow):
     try:
+        solutionExplorerWindow.child_window(title="Collapse All", control_type="Button").click_input()
         solutionMuRataAppWindow.child_window(title="muRataStudioSetup", control_type="TreeItem").right_click_input()
         for _ in range(5):
             pyautogui.press("down")
@@ -542,16 +524,16 @@ def install_muRata_studio_setup(solutionMuRataAppWindow):
     except Exception as e:
         print(f"Error installing muRata Studio setup: {e}")
 
-def muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow):
+def muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow):
     try:
         build_solution(muRataAppInVSCode)
-        install_muRata_studio_setup(solutionMuRataAppWindow)
+        install_muRata_studio_setup(solutionMuRataAppWindow, solutionExplorerWindow)
 
     except Exception as e:
         print(f"Error in muRataStudio installer packaging: {e}")
         raise
 
-def main(vscodePath, filePath):
+def main(vsCodePath, filePath):
 
     try:
         ### Open and Connect with Visual Studio Code ###
@@ -563,7 +545,7 @@ def main(vscodePath, filePath):
         
         solutionExplorerWindow=muRataAppInVSCode.child_window(title="Solution Explorer", control_type="Window")
         # solutionExplorerWindow=muRataAppInVSCode.child_window(title="Solution Explorer", auto_id="SolutionExplorer", control_type="Tree")
-        solutionMuRataAppWindow=solutionExplorerWindow.child_window(title="Solution 'muRata.Applications' ‎(20 of 20 projects)", control_type="TreeItem")
+        solutionMuRataAppWindow=solutionExplorerWindow.child_window(title_re=".*Solution 'muRata.Applications'.*", control_type="TreeItem")
 
 
         build_process_in_release_mode(muRataAppInVSCode)
@@ -581,9 +563,12 @@ def main(vscodePath, filePath):
 
         create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,fileSystemWindow )
 
-        change_version(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow)
+        
+        change_version(muRataAppInVSCode, solutionMuRataAppWindow, file_path_of_assembly_info_cs, version_type)
 
-        muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow)
+        muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow)
+
+        muRataAppInVSCode.CloseButton.click_input()
 
 
     except Exception as e:
@@ -600,7 +585,9 @@ if __name__=="__main__":
 
     file_path_of_assembly_info_cs = r"C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\Properties\AssemblyInfo.cs"
 
+    version_type="patch"
+
     main (vsCodePath, filePath)
 
 
-    ## basePath ask from customer=C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio
+ 

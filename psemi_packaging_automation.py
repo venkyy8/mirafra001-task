@@ -14,14 +14,15 @@ def build_solution(muRataAppInVSCode):
         muRataAppInVSCode.child_window(title="Build", control_type="MenuItem").click_input()
         time.sleep(10)
         muRataAppInVSCode.child_window(title="Build Solution", control_type="MenuItem").click_input()
-        customControl=muRataAppInVSCode.child_window(auto_id="WpfTextViewHost", control_type="Custom")
-        customControl.print_control_identifiers()
-        buildedResultArea=customControl.child_window(control_type="Edit", found_index=0)
+       
 
         ### Capture the output
-        buildedResult=buildedResultArea.window_text()
+        time.sleep(10)
+        customControl=muRataAppInVSCode.Output.Custom
+        buildedResult=customControl.child_window(title_re=".*Build started*.", auto_id="WpfTextView", control_type="Edit").window_text()
         print("Output of Build:", buildedResult)
-        time.sleep(20)
+
+        time.sleep(10)
         if "0 failed" in buildedResult:
             print("Build is succeeded")
             muRataAppInVSCode.Output.CloseButton.click_input()
@@ -32,28 +33,33 @@ def build_solution(muRataAppInVSCode):
         raise
 
 
-def build_solutionAtLast(muRataAppInVSCode):
-    try:
+# def build_solutionAtLast(muRataAppInVSCode):
+#     try:
             
-        muRataAppInVSCode.child_window(title="Build", control_type="MenuItem").click_input()
-        time.sleep(10)
-        muRataAppInVSCode.child_window(title="Build Solution", control_type="MenuItem").click_input()
-        customControl=muRataAppInVSCode.child_window(auto_id="WpfTextViewHost", control_type="Custom")
-        customControl.print_control_identifiers()
-        buildedResultArea=customControl.child_window(control_type="Edit", found_index=0)
+#         muRataAppInVSCode.child_window(title="Build", control_type="MenuItem").click_input()
+#         time.sleep(10)
+#         muRataAppInVSCode.child_window(title="Build Solution", control_type="MenuItem").click_input()
+#         # customControl=muRataAppInVSCode.child_window(auto_id="WpfTextViewHost", control_type="Custom")
+#         # buildedResultArea=customControl.child_window(control_type="Edit", found_index=0)
+       
 
-        ### Capture the output
-        buildedResult=buildedResultArea.window_text()
-        print("Output of Build:", buildedResult)
-        time.sleep(20)
-        # if "0 failed" in buildedResult:
-        #     print("Build is succeeded")
-        #     muRataAppInVSCode.Output.CloseButton.click_input()
-        # else:
-        #     raise Exception("Build failed. Consider it as an error.")
-    except Exception as e:
-        print(f"Error in build solution: {e}")
-        raise
+#         ### Capture the output
+#         time.sleep(10)
+#         customControl=muRataAppInVSCode.Output.Custom
+#         buildedResult=customControl.child_window(title_re=".*Build started*.", auto_id="WpfTextView", control_type="Edit").window_text()
+#         print("Output of Build:", buildedResult)
+#         print("response")
+#         # customControl.print_control_identifiers()
+#         muRataAppInVSCode.Output.print_control_identifiers()
+#         time.sleep(10)
+#         # if "0 failed" in buildedResult:
+#         #     print("Build is succeeded")
+#         #     muRataAppInVSCode.Output.CloseButton.click_input()
+#         # else:
+#         #     raise Exception("Build failed. Consider it as an error.")
+#     except Exception as e:
+#         print(f"Error in build solution: {e}")
+#         raise
 
 
 def build_process_in_release_mode(muRataAppInVSCode):
@@ -538,7 +544,7 @@ def install_muRata_studio_setup(solutionMuRataAppWindow):
 
 def muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow):
     try:
-        build_solutionAtLast(muRataAppInVSCode)
+        build_solution(muRataAppInVSCode)
         install_muRata_studio_setup(solutionMuRataAppWindow)
 
     except Exception as e:
@@ -560,8 +566,8 @@ def main(vscodePath, filePath):
         solutionMuRataAppWindow=solutionExplorerWindow.child_window(title="Solution 'muRata.Applications' ‎(20 of 20 projects)", control_type="TreeItem")
 
 
-        #build_process_in_release_mode(muRataAppInVSCode)
-        #update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWindow)
+        build_process_in_release_mode(muRataAppInVSCode)
+        update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWindow)
 
         ### Capturing Window
         fileSystemWindow=muRataAppInVSCode.child_window(title="File System (muRataStudioSetup)", auto_id="D:0:0:|File System (muRataStudioSetup)||{00000000-0000-0000-0000-000000000000}|", control_type="Pane")
@@ -571,11 +577,11 @@ def main(vscodePath, filePath):
         ### Capturing Window
         applicationFolder=fileSystemWindow.child_window(title="Application Folder", control_type="TreeItem")
 
-        #delete_primary_output_and_shortcuts(fileSystemWindow,muRataAppInVSCode,applicationFolder)
+        delete_primary_output_and_shortcuts(fileSystemWindow,muRataAppInVSCode,applicationFolder)
 
-        #create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,fileSystemWindow )
+        create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,fileSystemWindow )
 
-       # change_version(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow)
+        change_version(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow)
 
         muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow)
 

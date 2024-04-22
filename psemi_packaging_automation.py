@@ -6,7 +6,7 @@ import time
 import pyautogui
 import pyperclip
 import re
-
+import subprocess
 
 
 
@@ -63,7 +63,54 @@ def select_version_type_to_increment():
         print()
         print(f"Error selecting version type: {e}")
         raise
-    
+
+
+
+
+def connect_or_open_vscode(vsCodePath, filePath):
+    try:
+        # Try to connect to an existing instance of Visual Studio Code
+        app = Application(backend="uia").connect(path=vsCodePath, timeout=10)
+        print("Connected to the existing instance of Visual Studio Code.")
+        # Activate and focus the window
+        app.window().set_focus()
+        return app.window()
+    except Exception as e:
+        print(f"Error connecting to existing Visual Studio Code instance: {e}")
+        # If connection fails, open a new instance of Visual Studio Code
+        print("Opening a new instance of Visual Studio Code...")
+        try:
+            subprocess.Popen([vsCodePath, filePath])
+            print("Visual Studio Code opened successfully.")
+            # Wait for the new instance to start
+            time.sleep(10)  # Adjust the sleep time as needed
+            app = Application(backend="uia").connect(path=vsCodePath, timeout=10)
+            print("Connected to the new instance of Visual Studio Code.")
+            return app.window()
+        except Exception as ex:
+            print(f"An error occurred while opening Visual Studio Code: {ex}")
+            raise
+
+def open_solution_explorer(muRataAppInVSCode):
+    # Check if Solution Explorer is already open
+    solution_explorer = muRataAppInVSCode.child_window(title="Solution Explorer", control_type="Pane", found_index=0)
+    if solution_explorer.exists():
+        print("Solution Explorer is already open.")
+        solution_explorer.set_focus()
+        return
+    else:
+        # Find the parent menu containing the "View" menu item
+        
+        #Find and click on the "View" menu item
+        view_menu = muRataAppInVSCode.child_window(title="View", control_type="MenuItem")
+        view_menu.click_input()
+        time.sleep(2)
+
+        # Find and click on the "Solution Explorer" menu item under the "View" menu
+        solution_explorer_menu = muRataAppInVSCode.child_window(title="Solution Explorer", control_type="MenuItem")
+        solution_explorer_menu.click_input()
+        print("Opened Solution Explorer.")
+
 
 
 def build_solution(muRataAppInVSCode):
@@ -633,17 +680,24 @@ def main(vsCodePath):
 
 
         ### Open and Connect with Visual Studio Code ###
-        app=Application(backend="uia").start(vsCodePath + ' ' + filePath )
+        # app=Application(backend="uia").start(vsCodePath + ' ' + filePath )
 
-        ### Capturing Window
-        muRataAppInVSCode=app.window(title="muRata.Applications - Microsoft Visual Studio")
-        time.sleep(10)
+        # ### Capturing Window
+        # muRataAppInVSCode = connect_or_open_vscode(vsCodePath, filePath)
+        # muRataAppInVSCode=app.window(title="muRata.Applications - Microsoft Visual Studio")
+        # time.sleep(10)
         
+        muRataAppInVSCode = connect_or_open_vscode(vsCodePath, filePath)
+        time.sleep(10)
+
+
         solutionExplorerWindow=muRataAppInVSCode.child_window(title="Solution Explorer", control_type="Window")
         # solutionExplorerWindow=muRataAppInVSCode.child_window(title="Solution Explorer", auto_id="SolutionExplorer", control_type="Tree")
         solutionMuRataAppWindow=solutionExplorerWindow.child_window(title_re=".*Solution 'muRata.Applications'.*", control_type="TreeItem")
 
-
+        
+        
+        open_solution_explorer(muRataAppInVSCode)
         build_process_in_release_mode(muRataAppInVSCode,sourceFolder1, sourceFolder2, desinationFolderRelease)
         update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWindow, devicesFolderOfRelease, pluginsFolderOfRelease)
 

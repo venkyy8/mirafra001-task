@@ -699,7 +699,7 @@ def main(vsCodePath):
         solutionMuRataAppWindow=solutionExplorerWindow.child_window(title_re=".*Solution 'muRata.Applications'.*", control_type="TreeItem")
 
 
-        # build_process_in_release_mode(muRataAppInVSCode,sourceFolder1, sourceFolder2, desinationFolderRelease)
+        build_process_in_release_mode(muRataAppInVSCode,sourceFolder1, sourceFolder2, desinationFolderRelease)
         update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWindow, devicesFolderOfRelease, pluginsFolderOfRelease)
 
         ### Capturing Window

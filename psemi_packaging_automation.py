@@ -6,7 +6,7 @@ import time
 import pyautogui
 import pyperclip
 import re
-import file_explorer as fileExplorer
+
 
 
 
@@ -186,57 +186,7 @@ def update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWin
         print(f"Error occurred while updating folders of Application Folder: {e}")
         raise
 
-# def update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWindow, devicesFolderOfRelease, pluginsFolderOfRelease):
-#     try:
-#         ### Click File System Editor ###
-#         solutionMuRataAppWindow.child_window(title="muRataStudioSetup", control_type="TreeItem").click_input()
-#         time.sleep(5)
-#         muRataAppInVSCode.child_window(title="&File System", control_type="Button").click_input()
 
-# 	    ###  Delete all the files from Devices of Application Folder and copy from Devices of Release Folder ###
-#         fileSystemWindow=muRataAppInVSCode.child_window(title="File System (muRataStudioSetup)", auto_id="D:0:0:|File System (muRataStudioSetup)||{00000000-0000-0000-0000-000000000000}|", control_type="Pane")
-#         applicationFolder=fileSystemWindow.child_window(title="Application Folder", control_type="TreeItem")
-#         applicationFolder.double_click_input()
-#         applicationFolder.child_window(title="Devices", control_type="TreeItem").double_click_input()
-#         delete_all_files_in_a_folder()
-#         deleteProcess=muRataAppInVSCode.child_window(title="Microsoft Visual Studio", control_type="Window")
-#         deleteProcess.YesButton.click_input()
-
-#         global currentWindowTitle
-
-#         newWindowTitle= fileExplorer.open_folder_in_file_explorer(devicesFolderOfRelease,currentWindowTitle)
-#         currentWindowTitle=newWindowTitle
-#         # time.sleep(2)
-#         # pyautogui.hotkey('ctrl', 'a')
-#         # pyautogui.hotkey('ctrl', 'c')
-        
-          
-#         muRataAppInVSCode.set_focus()
-#         pyautogui.hotkey('ctrl', 'v')
-#         time.sleep(2)
-
-
-
-#         ### Delete all the files from Plugins of Application Folder and copy from Plugins of Release Folder ###
-#         # applicationFolder.child_window(title="Plugins", control_type="TreeItem").double_click_input()
-#         # delete_all_files_in_a_folder()
-#         # deleteProcess=muRataAppInVSCode.child_window(title="Microsoft Visual Studio", control_type="Window")
-#         # deleteProcess.YesButton.click_input()
-
-#         # newWindowTitle= fileExplorer.open_folder_in_file_explorer(pluginsFolderOfRelease,currentWindowTitle)
-#         # currentWindowTitle=newWindowTitle
-#         # time.sleep(5)
-#         # copy_all_files_in_a_folder()
-          
-#         # muRataAppInVSCode.set_focus()
-#         # pyautogui.hotkey('ctrl', 'v')
-
-
-#     except Exception as e:
-#         print()
-#         print(f"Error occurred while updating folders of Application Folder: {e}")
-#         raise
- 
 
 def delete_primary_output_and_shortcuts(fileSystemWindow,muRataAppInVSCode,applicationFolder):
     try:
@@ -681,11 +631,6 @@ def main(vsCodePath):
         print()
         print("Packaging Process is Started")
 
-        # ### Start File Explorer ###
-        # fileExplorer.start_file_explorer()
-
-
-
 
         ### Open and Connect with Visual Studio Code ###
         app=Application(backend="uia").start(vsCodePath + ' ' + filePath )
@@ -720,9 +665,16 @@ def main(vsCodePath):
         muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow)
 
         muRataAppInVSCode.CloseButton.click_input()
+        devicesWindowInfileExplorer = Desktop(backend="uia").window(title='Devices')
+        devicesWindowInfileExplorer.set_focus()
+        devicesWindowInfileExplorer.CloseButton.click_input()
+        pluginsWindowInfileExplorer = Desktop(backend="uia").window(title='Devices')
+        pluginsWindowInfileExplorer.set_focus()
+        pluginsWindowInfileExplorer.CloseButton.click_input()
 
-        ## Close File Explorer ###
-        fileExplorer.close_file_explorer(currentWindowTitle)
+
+
+    
 
 
     except Exception as e:

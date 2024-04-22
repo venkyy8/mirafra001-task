@@ -6,6 +6,18 @@ import time
 import pyautogui
 import pyperclip
 import re
+import file_explorer as fileExplorer
+
+
+
+def copy_all_files_in_a_folder():
+        pyautogui.hotkey('ctrl', 'a')
+        pyautogui.hotkey('ctrl', 'c')   
+
+def delete_all_files_in_a_folder():
+        pyautogui.hotkey('ctrl', 'a')
+        pyautogui.press('delete') 
+        
 
 def get_base_path_from_user():
     """
@@ -56,10 +68,12 @@ def select_version_type_to_increment():
 
 def build_solution(muRataAppInVSCode):
     try:
-            
-        muRataAppInVSCode.child_window(title="Build", control_type="MenuItem").click_input()
-        time.sleep(10)
-        muRataAppInVSCode.child_window(title="Build Solution", control_type="MenuItem").click_input()
+        buildWindow= muRataAppInVSCode.child_window(title="Build", control_type="MenuItem")
+        buildWindow.click_input()
+        time.sleep(2)
+        ### Click Build solution ###
+        pyautogui.press('down')
+        pyautogui.press('enter')
        
 
         ### Capture the output
@@ -85,17 +99,16 @@ def build_solution(muRataAppInVSCode):
 def build_process_in_release_mode(muRataAppInVSCode,sourceFolder1, sourceFolder2, desinationFolderRelease):
 
     try:
-         ### Change from Debug to Release Mode ###
+        ### Change from Debug to Release Mode ###
         muRataAppInVSCode.solutionConfigurations.select("Release")
 
-        ######################################Laterrrrr ##################
-        ### Open Folder in File Explorer ###
-        solutionExplorerWindow=muRataAppInVSCode.child_window(title="Solution Explorer", auto_id="SolutionExplorer", control_type="Tree")
-        solutionMuRataAppWindow=solutionExplorerWindow.child_window(title_re=".*Solution 'muRata.Applications'*.", control_type="TreeItem")
-        solutionMuRataAppWindow.right_click_input()
+        ### Copy Devices and Plugins folders from Debug to Release ###
 
-      
+        if os.path.exists(desinationFolderRelease):
+            shutil.rmtree(desinationFolderRelease)
 
+        # Create destination folder if it does not exist
+        os.makedirs(desinationFolderRelease)
         shutil.copytree(sourceFolder1,os.path.join(desinationFolderRelease, os.path.basename(sourceFolder1)))
         shutil.copytree(sourceFolder2,os.path.join(desinationFolderRelease,os.path.basename(sourceFolder2)))
 
@@ -172,7 +185,59 @@ def update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWin
         print()
         print(f"Error occurred while updating folders of Application Folder: {e}")
         raise
+
+# def update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWindow, devicesFolderOfRelease, pluginsFolderOfRelease):
+#     try:
+#         ### Click File System Editor ###
+#         solutionMuRataAppWindow.child_window(title="muRataStudioSetup", control_type="TreeItem").click_input()
+#         time.sleep(5)
+#         muRataAppInVSCode.child_window(title="&File System", control_type="Button").click_input()
+
+# 	    ###  Delete all the files from Devices of Application Folder and copy from Devices of Release Folder ###
+#         fileSystemWindow=muRataAppInVSCode.child_window(title="File System (muRataStudioSetup)", auto_id="D:0:0:|File System (muRataStudioSetup)||{00000000-0000-0000-0000-000000000000}|", control_type="Pane")
+#         applicationFolder=fileSystemWindow.child_window(title="Application Folder", control_type="TreeItem")
+#         applicationFolder.double_click_input()
+#         applicationFolder.child_window(title="Devices", control_type="TreeItem").double_click_input()
+#         delete_all_files_in_a_folder()
+#         deleteProcess=muRataAppInVSCode.child_window(title="Microsoft Visual Studio", control_type="Window")
+#         deleteProcess.YesButton.click_input()
+
+#         global currentWindowTitle
+
+#         newWindowTitle= fileExplorer.open_folder_in_file_explorer(devicesFolderOfRelease,currentWindowTitle)
+#         currentWindowTitle=newWindowTitle
+#         # time.sleep(2)
+#         # pyautogui.hotkey('ctrl', 'a')
+#         # pyautogui.hotkey('ctrl', 'c')
+        
+          
+#         muRataAppInVSCode.set_focus()
+#         pyautogui.hotkey('ctrl', 'v')
+#         time.sleep(2)
+
+
+
+#         ### Delete all the files from Plugins of Application Folder and copy from Plugins of Release Folder ###
+#         # applicationFolder.child_window(title="Plugins", control_type="TreeItem").double_click_input()
+#         # delete_all_files_in_a_folder()
+#         # deleteProcess=muRataAppInVSCode.child_window(title="Microsoft Visual Studio", control_type="Window")
+#         # deleteProcess.YesButton.click_input()
+
+#         # newWindowTitle= fileExplorer.open_folder_in_file_explorer(pluginsFolderOfRelease,currentWindowTitle)
+#         # currentWindowTitle=newWindowTitle
+#         # time.sleep(5)
+#         # copy_all_files_in_a_folder()
+          
+#         # muRataAppInVSCode.set_focus()
+#         # pyautogui.hotkey('ctrl', 'v')
+
+
+#     except Exception as e:
+#         print()
+#         print(f"Error occurred while updating folders of Application Folder: {e}")
+#         raise
  
+
 def delete_primary_output_and_shortcuts(fileSystemWindow,muRataAppInVSCode,applicationFolder):
     try:
         ### Delete Primary Output from Murata ###
@@ -616,20 +681,25 @@ def main(vsCodePath):
         print()
         print("Packaging Process is Started")
 
+        # ### Start File Explorer ###
+        # fileExplorer.start_file_explorer()
+
+
+
 
         ### Open and Connect with Visual Studio Code ###
         app=Application(backend="uia").start(vsCodePath + ' ' + filePath )
 
         ### Capturing Window
         muRataAppInVSCode=app.window(title="muRata.Applications - Microsoft Visual Studio")
-        time.sleep(20)
+        time.sleep(10)
         
         solutionExplorerWindow=muRataAppInVSCode.child_window(title="Solution Explorer", control_type="Window")
         # solutionExplorerWindow=muRataAppInVSCode.child_window(title="Solution Explorer", auto_id="SolutionExplorer", control_type="Tree")
         solutionMuRataAppWindow=solutionExplorerWindow.child_window(title_re=".*Solution 'muRata.Applications'.*", control_type="TreeItem")
 
 
-        build_process_in_release_mode(muRataAppInVSCode,sourceFolder1, sourceFolder2, desinationFolderRelease)
+        # build_process_in_release_mode(muRataAppInVSCode,sourceFolder1, sourceFolder2, desinationFolderRelease)
         update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWindow, devicesFolderOfRelease, pluginsFolderOfRelease)
 
         ### Capturing Window
@@ -651,10 +721,17 @@ def main(vsCodePath):
 
         muRataAppInVSCode.CloseButton.click_input()
 
+        ## Close File Explorer ###
+        fileExplorer.close_file_explorer(currentWindowTitle)
+
 
     except Exception as e:
             print()
             print(f"An error occurred: {e}")
+            # fileExplorer.set_focus()
+            # fileExplorer.close_file_explorer()
+            # muRataAppInVSCode.set_focus()
+            # muRataAppInVSCode.CloseButton()
             pyautogui.hotkey('ctrl', 'f4')
             return
 
@@ -663,6 +740,7 @@ if __name__=="__main__":
 
     ### Delcare VScode path and File Path ###
     vsCodePath=r"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe"
+    currentWindowTitle="File Explorer"
     main (vsCodePath)
 
 

@@ -112,17 +112,8 @@ def open_solution_explorer(muRataAppInVSCode):
         print("Opened Solution Explorer.")
 
 
-
-def build_solution(muRataAppInVSCode):
+def capture_the_result_of_build(muRataAppInVSCode):
     try:
-        buildWindow= muRataAppInVSCode.child_window(title="Build", control_type="MenuItem")
-        buildWindow.click_input()
-        time.sleep(2)
-        ### Click Build solution ###
-        pyautogui.press('down')
-        pyautogui.press('enter')
-       
-
         ### Capture the output
         time.sleep(10)
         customControl=muRataAppInVSCode.Output.Custom
@@ -137,6 +128,35 @@ def build_solution(muRataAppInVSCode):
             muRataAppInVSCode.Output.CloseButton.click_input()
         else:
             raise Exception("Build failed. Consider it as an error.")
+    except Exception as e:
+        print()
+        print(f"Error in capture the build result : {e}")
+        raise
+
+def build_solution(muRataAppInVSCode):
+    try:
+        buildWindow= muRataAppInVSCode.child_window(title="Build", control_type="MenuItem")
+        buildWindow.click_input()
+        time.sleep(2)
+        ### Click Build solution ###
+        pyautogui.press('down')
+        pyautogui.press('enter')
+        capture_the_result_of_build(muRataAppInVSCode)
+
+        # ### Capture the output
+        # time.sleep(10)
+        # customControl=muRataAppInVSCode.Output.Custom
+        # buildedResult=customControl.child_window(title_re=".*Build started*.", auto_id="WpfTextView", control_type="Edit").window_text()
+        # print()
+        # print("Output of Build:", buildedResult)
+
+        # time.sleep(10)
+        # if "0 failed" in buildedResult:
+        #     print()
+        #     print("Build is succeeded")
+        #     muRataAppInVSCode.Output.CloseButton.click_input()
+        # else:
+        #     raise Exception("Build failed. Consider it as an error.")
     except Exception as e:
         print()
         print(f"Error in build solution: {e}")
@@ -670,10 +690,26 @@ def install_muRata_studio_setup(solutionMuRataAppWindow, solutionExplorerWindow)
         print()
         print(f"Error installing muRata Studio setup: {e}")
 
+def build_muRata_studio_Setup(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow):
+    try:
+        ### Build muRata Studio Setup ###
+        solutionExplorerWindow.child_window(title="Collapse All", control_type="Button").click_input()
+        solutionMuRataAppWindow.child_window(title="muRataStudioSetup", control_type="TreeItem").right_click_input()
+        pyautogui.press("down")
+        time.sleep(0.3)
+        pyautogui.press("enter")
+        capture_the_result_of_build(muRataAppInVSCode)
+
+    except Exception as e:
+        print()
+        print(f"Error in building muRataStudio Setup: {e}")
+        raise
+
 def muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow):
     try:
         build_solution(muRataAppInVSCode)
-        install_muRata_studio_setup(solutionMuRataAppWindow, solutionExplorerWindow)
+        build_muRata_studio_Setup(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow)
+        install_muRata_studio_setup(solutionMuRataAppWindow, solutionExplorerWindow, )
 
     except Exception as e:
         print()
@@ -700,14 +736,6 @@ def main(vsCodePath):
         print()
         print("Packaging Process is Started")
 
-
-        ### Open and Connect with Visual Studio Code ###
-        # app=Application(backend="uia").start(vsCodePath + ' ' + filePath )
-
-        # ### Capturing Window
-        # muRataAppInVSCode = connect_or_open_vscode(vsCodePath, filePath)
-        # muRataAppInVSCode=app.window(title="muRata.Applications - Microsoft Visual Studio")
-        # time.sleep(10)
         
         muRataAppInVSCode = connect_or_open_vscode(vsCodePath, filePath)
         time.sleep(10)

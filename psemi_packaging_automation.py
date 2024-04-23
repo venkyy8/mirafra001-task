@@ -457,10 +457,15 @@ def change_version_in_assembly_info(assemblyInfoFilePath, version_type):
             version_segments.append(0)
         
         # Determine which part of the version string to update
-        if version_type == "minor":
+        if version_type == 1:  # Major update
+            version_segments[0] += 1
+            version_segments[1:] = [0, 0, 0]
+        elif version_type == 2:  # Minor update
             version_segments[1] += 1
-        elif version_type == "patch":
+            version_segments[2:] = [0, 0]
+        elif version_type == 3:  # Patch update
             version_segments[2] += 1
+            version_segments[3] = 0
         else:
             print()
             print("Invalid version type. Must be 'minor' or 'patch'.")
@@ -500,9 +505,14 @@ def change_version_in_muRata_studio_properties(muRataAppInVSCode, solutionMuRata
 
         major, minor, patch = map(int, initial_version.split("."))
 
-        if version_type == "minor":
+        if version_type == 1:  # Major update
+            major += 1
+            minor = 0
+            patch = 0
+        elif version_type == 2:  # Minor update
             minor += 1
-        elif version_type == "patch":
+            patch = 0
+        elif version_type == 3:  # Patch update
             patch += 1
         else:
             print()
@@ -698,8 +708,8 @@ def main(vsCodePath):
         
         
         open_solution_explorer(muRataAppInVSCode)
-        build_process_in_release_mode(muRataAppInVSCode,sourceFolder1, sourceFolder2, desinationFolderRelease)
-        update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWindow, devicesFolderOfRelease, pluginsFolderOfRelease)
+        #build_process_in_release_mode(muRataAppInVSCode,sourceFolder1, sourceFolder2, desinationFolderRelease)
+        #update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWindow, devicesFolderOfRelease, pluginsFolderOfRelease)
 
         ### Capturing Window
         fileSystemWindow=muRataAppInVSCode.child_window(title="File System (muRataStudioSetup)", auto_id="D:0:0:|File System (muRataStudioSetup)||{00000000-0000-0000-0000-000000000000}|", control_type="Pane")
@@ -709,14 +719,14 @@ def main(vsCodePath):
         ### Capturing Window
         applicationFolder=fileSystemWindow.child_window(title="Application Folder", control_type="TreeItem")
 
-        delete_primary_output_and_shortcuts(fileSystemWindow,muRataAppInVSCode,applicationFolder)
+        #delete_primary_output_and_shortcuts(fileSystemWindow,muRataAppInVSCode,applicationFolder)
 
-        create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,fileSystemWindow )
+        #create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,fileSystemWindow )
 
         
         change_version(muRataAppInVSCode, solutionMuRataAppWindow, assemblyInfoFilePath, version_type)
 
-        muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow)
+        #muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow)
 
         muRataAppInVSCode.CloseButton.click_input()
         devicesWindowInfileExplorer = Desktop(backend="uia").window(title='Devices')

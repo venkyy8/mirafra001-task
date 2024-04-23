@@ -436,17 +436,16 @@ def get_initial_version_from_assembly_info_cs_file(assemblyInfoFilePath):
         raise
     
 
+
 def change_version_in_assembly_info(assemblyInfoFilePath, version_type):
     """
     Updates the version number in the specified file.
 
     Args:
-        filepath: The path to the file.
-        initial_version: The initial version number.
-        version_type: The type of version to update ("minor" or "patch").
+        assemblyInfoFilePath: The path to the file.
+        version_type: The type of version to update ("major", "minor", or "patch").
     """
     try:
-
         initial_version = get_initial_version_from_assembly_info_cs_file(assemblyInfoFilePath)
 
         # Split the initial version into segments
@@ -456,15 +455,30 @@ def change_version_in_assembly_info(assemblyInfoFilePath, version_type):
         while len(version_segments) < 4:
             version_segments.append(0)
         
-        # Determine which part of the version string to update
-        if version_type == "minor":
+        # Map input to version type if it's an integer
+        if isinstance(version_type, int):
+            if version_type == 1:  # Major update
+                version_segments[0] += 1
+                version_segments[1:] = [0, 0, 0]
+            elif version_type == 2:  # Minor update
+                version_segments[1] += 1
+                version_segments[2:] = [0, 0]
+            elif version_type == 3:  # Patch update
+                version_segments[2] += 1
+                version_segments[3] = 0
+            else:
+                raise ValueError("Invalid version type. Must be 1 for 'major', 2 for 'minor', or 3 for 'patch'.")
+        elif version_type == "major":  # Major update
+            version_segments[0] += 1
+            version_segments[1:] = [0, 0, 0]
+        elif version_type == "minor":  # Minor update
             version_segments[1] += 1
-        elif version_type == "patch":
+            version_segments[2:] = [0, 0]
+        elif version_type == "patch":  # Patch update
             version_segments[2] += 1
+            version_segments[3] = 0
         else:
-            print()
-            print("Invalid version type. Must be 'minor' or 'patch'.")
-            raise Exception("Invalid version type. Consider as Error")
+            raise ValueError("Invalid version type. Must be 'major', 'minor', or 'patch'.")
         
         # Construct the updated version string
         updated_version = '.'.join(map(str, version_segments))
@@ -500,13 +514,18 @@ def change_version_in_muRata_studio_properties(muRataAppInVSCode, solutionMuRata
 
         major, minor, patch = map(int, initial_version.split("."))
 
-        if version_type == "minor":
+        if version_type == 1 or version_type == "major":  # Major update
+            major += 1
+            minor = 0
+            patch = 0
+        elif version_type == 2 or version_type == "minor":  # Minor update
             minor += 1
-        elif version_type == "patch":
+            patch = 0
+        elif version_type == 3 or version_type == "patch":  # Patch update
             patch += 1
         else:
             print()
-            print("Invalid version type. Must be 'minor' or 'patch'.")
+            print("Invalid version type. Must be 1, 2, or 3 for 'major', 'minor', or 'patch' respectively, or their string representations.")
             return
 
         new_version = f"{major}.{minor}.{patch}"
@@ -514,7 +533,7 @@ def change_version_in_muRata_studio_properties(muRataAppInVSCode, solutionMuRata
         version_edit = properties_window.child_window(title="Version", control_type="Edit")
         version_edit.type_keys(new_version)
         print()
-        print(f" Updated {version_type.capitalize()} version in MuRata Studio Property is {new_version}")
+        print(f" Updated {'Major' if version_type == 1 or version_type == 'major' else 'Minor' if version_type == 2 or version_type == 'minor' else 'Patch'} version in MuRata Studio Property is {new_version}")
         time.sleep(1)
 
         properties_window.CloseButton.click_input()
@@ -527,6 +546,9 @@ def change_version_in_muRata_studio_properties(muRataAppInVSCode, solutionMuRata
         print()
         print(f"Error changing version in muRata Studio properties: {e}")
         raise
+
+
+
 
 def get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow ):
 

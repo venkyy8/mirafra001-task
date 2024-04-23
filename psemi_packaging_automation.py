@@ -38,28 +38,33 @@ def get_base_path_from_user():
     return base_path
 
 
-def Input_from_user_for_updating_version(initial_version):
-    """
-    Update the version based on user input.
-    """
-    
+def select_version_type_to_increment():
     try:
-        update_type = int(input("Enter Version update type (1 for major, 2 for minor, 3 for patch): "))
-        version_segments = list(map(int, initial_version.split('.')))
+        print() 
+        print("Which part of the version number do you want to increment?")
+        print("1. Major version (e.g., 0.55.2 -> 1.55.2)")
+        print("2. Minor version (e.g., 0.55.2 -> 0.56.2)")
+        print("3. Patch version (e.g., 0.55.2 -> 0.55.3)")
+        print() 
 
-        if update_type == 1:  # Major update
-            version_segments[0] += 1
-            version_segments[1:] = [0, 0]
-        elif update_type == 2:  # Minor update
-            version_segments[1] += 1
-            version_segments[2:] = [0]
-        elif update_type == 3:  # Patch update
-            version_segments[2] += 1
-        updated_version = '.'.join(map(str, version_segments))
-        return updated_version
-    except ValueError:
-        print("Invalid input. Please enter a valid integer.")
-        return Input_from_user_for_updating_version(initial_version)
+        selection = input("Enter the number corresponding to your choice: ")
+        if selection == "1":
+            return "major"
+        elif selection == "2":
+            return "minor"
+        elif selection == "3":
+            return "patch"
+        else:
+            print()
+            print("Invalid selection. Please enter a number between 1 and 3.")
+            return select_version_type_to_increment()
+            
+    except Exception as e:
+        print()
+        print(f"Error selecting version type: {e}")
+        raise
+
+
 
 
 def connect_or_open_vscode(vsCodePath, filePath):
@@ -431,20 +436,35 @@ def get_initial_version_from_assembly_info_cs_file(assemblyInfoFilePath):
         raise
     
 
-def change_version_in_assembly_info(assemblyInfoFilePath, updated_version):
+def change_version_in_assembly_info(assemblyInfoFilePath, version_type):
     """
-    Update the version number in the specified AssemblyInfo.cs file.
+    Updates the version number in the specified file.
+
+    Args:
+        filepath: The path to the file.
+        initial_version: The initial version number.
+        version_type: The type of version to update ("minor" or "patch").
     """
     try:
 
-        final_version=Input_from_user_for_updating_version(updated_version)
+        initial_version = get_initial_version_from_assembly_info_cs_file(assemblyInfoFilePath)
 
         # Split the initial version into segments
-        version_segments = list(map(int, final_version.split('.')))
+        version_segments = list(map(int, initial_version.split('.')))
         
         # Ensure there are four segments in the version string
         while len(version_segments) < 4:
             version_segments.append(0)
+        
+        # Determine which part of the version string to update
+        if version_type == "minor":
+            version_segments[1] += 1
+        elif version_type == "patch":
+            version_segments[2] += 1
+        else:
+            print()
+            print("Invalid version type. Must be 'minor' or 'patch'.")
+            raise Exception("Invalid version type. Consider as Error")
         
         # Construct the updated version string
         updated_version = '.'.join(map(str, version_segments))
@@ -456,16 +476,19 @@ def change_version_in_assembly_info(assemblyInfoFilePath, updated_version):
                 if "AssemblyVersion" in line or "AssemblyFileVersion" in line:
                     line = re.sub(r'\d+\.\d+\.\d+\.\d+', updated_version, line)
                 file.write(line)
-        
+        print()
+        print(f" Updated {version_type.capitalize()} version in Assembly info file is {updated_version}")
     except Exception as e:
         print()
         print(f"Error changing version in AssemblyInfo.cs file: {e}")
         raise
 
-def change_version_in_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow, updated_version):
+
+
+def change_version_in_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow, version_type):
     try:
-        
-        final_version=Input_from_user_for_updating_version(updated_version)
+        initial_version = get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow)
+
         muRataAppInVSCode.type_keys("{F4}")
 
         solutionMuRataAppWindow.child_window(title="muRataStudioSetup", control_type="TreeItem").click_input()
@@ -475,10 +498,23 @@ def change_version_in_muRata_studio_properties(muRataAppInVSCode, solutionMuRata
         properties_window.child_window(title="Version", control_type="TreeItem").click_input()
         properties_window.child_window(title="Version", control_type="Edit").double_click_input()
 
+        major, minor, patch = map(int, initial_version.split("."))
+
+        if version_type == "minor":
+            minor += 1
+        elif version_type == "patch":
+            patch += 1
+        else:
+            print()
+            print("Invalid version type. Must be 'minor' or 'patch'.")
+            return
+
+        new_version = f"{major}.{minor}.{patch}"
+
         version_edit = properties_window.child_window(title="Version", control_type="Edit")
-        version_edit.type_keys(final_version)
+        version_edit.type_keys(new_version)
         print()
-        
+        print(f" Updated {version_type.capitalize()} version in MuRata Studio Property is {new_version}")
         time.sleep(1)
 
         properties_window.CloseButton.click_input()
@@ -637,8 +673,8 @@ def main(vsCodePath):
         filePath = fr"{base_path}\Solutions\muRata.Applications\muRata.Applications.sln"
 
         ### Get Version Type
-        #version_type=select_version_type_to_increment()
-        updated_version = Input_from_user_for_updating_version(initial_version)
+        version_type=select_version_type_to_increment()
+
         print()
         print("Packaging Process is Started")
 
@@ -672,25 +708,15 @@ def main(vsCodePath):
 
         ### Capturing Window
         applicationFolder=fileSystemWindow.child_window(title="Application Folder", control_type="TreeItem")
-        
-         # Call the function to get initial version
-        
-        initial_version =get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow)
-        # Call the function to update version
-        
-        
 
-        # Call the function to change version in AssemblyInfo.cs
-        change_version_in_assembly_info(assemblyInfoFilePath, updated_version)
-        
-        #delete_primary_output_and_shortcuts(fileSystemWindow,muRataAppInVSCode,applicationFolder)
+        delete_primary_output_and_shortcuts(fileSystemWindow,muRataAppInVSCode,applicationFolder)
 
-        #create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,fileSystemWindow )
+        create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,fileSystemWindow )
 
         
-        #change_version(muRataAppInVSCode, solutionMuRataAppWindow, assemblyInfoFilePath, version_type)
+        change_version(muRataAppInVSCode, solutionMuRataAppWindow, assemblyInfoFilePath, version_type)
 
-        #muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow)
+        muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow)
 
         muRataAppInVSCode.CloseButton.click_input()
         devicesWindowInfileExplorer = Desktop(backend="uia").window(title='Devices')

@@ -847,7 +847,7 @@ def main(vsCodePath):
 
 
     except Exception as e:
-            logger.critical('f"An error occurred: {e}"')
+            logger.critical(f'An error occurred: {e}')
             # fileExplorer.set_focus()
             # fileExplorer.close_file_explorer()
             # muRataAppInVSCode.set_focus()

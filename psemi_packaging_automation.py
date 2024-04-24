@@ -479,67 +479,67 @@ def get_initial_version_from_assembly_info_cs_file(assemblyInfoFilePath):
         raise
     
 
-
-def change_version_in_assembly_info(assemblyInfoFilePath, version_type):
+def change_version_in_assembly_files(file_paths_dict_for_plugins_and_actual_assembly_file, version_type, muRataAppInVSCode, solutionMuRataAppWindow):
     """
-    Updates the version number in the specified file.
+    Updates the version number in the specified files.
 
     Args:
-        assemblyInfoFilePath: The path to the file.
+        file_paths_dict: A dictionary containing file paths for various files.
         version_type: The type of version to update ("major", "minor", or "patch").
     """
     try:
-        initial_version = get_initial_version_from_assembly_info_cs_file(assemblyInfoFilePath)
+        for category, paths in file_paths_dict_for_plugins_and_actual_assembly_file.items():
+            for plugin, file_path in paths.items():
+                Assemblyinfo_FileVersion = get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow)
 
-        # Split the initial version into segments
-        version_segments = list(map(int, initial_version.split('.')))
-        
-        # Ensure there are four segments in the version string
-        while len(version_segments) < 4:
-            version_segments.append(0)
-        
-        # Map input to version type if it's an integer
-        if isinstance(version_type, int):
-            if version_type == 1:  # Major update
-                version_segments[0] += 1
-                version_segments[1:] = [0, 0, 0]
-            elif version_type == 2:  # Minor update
-                version_segments[1] += 1
-                version_segments[2:] = [0, 0]
-            elif version_type == 3:  # Patch update
-                version_segments[2] += 1
-                version_segments[3] = 0
-            else:
-                raise ValueError("Invalid version type. Must be 1 for 'major', 2 for 'minor', or 3 for 'patch'.")
-        elif version_type == "major":  # Major update
-            version_segments[0] += 1
-            version_segments[1:] = [0, 0, 0]
-        elif version_type == "minor":  # Minor update
-            version_segments[1] += 1
-            version_segments[2:] = [0, 0]
-        elif version_type == "patch":  # Patch update
-            version_segments[2] += 1
-            version_segments[3] = 0
-        else:
-            raise ValueError("Invalid version type. Must be 'major', 'minor', or 'patch'.")
-        
-        # Construct the updated version string
-        updated_version = '.'.join(map(str, version_segments))
-        
-        with open(assemblyInfoFilePath, 'r') as file:
-            lines = file.readlines()
-        with open(assemblyInfoFilePath, 'w') as file:
-            for line in lines:
-                if "AssemblyVersion" in line or "AssemblyFileVersion" in line:
-                    line = re.sub(r'\d+\.\d+\.\d+\.\d+', updated_version, line)
-                file.write(line)
-        print()
-        print(f" Updated {version_type.capitalize()} version in Assembly info file is {updated_version}")
+                # Split the initial version into segments
+                version_segments = list(map(int, Assemblyinfo_FileVersion.split('.')))
+
+                # Ensure there are four segments in the version string
+                while len(version_segments) < 4:
+                    version_segments.append(0)
+
+                # Map input to version type if it's an integer
+                if isinstance(version_type, int):
+                    if version_type == 1:  # Major update
+                        version_segments[0] += 1
+                        version_segments[1:] = [0, 0, 0]
+                    elif version_type == 2:  # Minor update
+                        version_segments[1] += 1
+                        version_segments[2:] = [0, 0]
+                    elif version_type == 3:  # Patch update
+                        version_segments[2] += 1
+                        version_segments[3] = 0
+                    else:
+                        raise ValueError("Invalid version type. Must be 1 for 'major', 2 for 'minor', or 3 for 'patch'.")
+                elif version_type == "major":  # Major update
+                    version_segments[0] += 1
+                    version_segments[1:] = [0, 0, 0]
+                elif version_type == "minor":  # Minor update
+                    version_segments[1] += 1
+                    version_segments[2:] = [0, 0]
+                elif version_type == "patch":  # Patch update
+                    version_segments[2] += 1
+                    version_segments[3] = 0
+                else:
+                    raise ValueError("Invalid version type. Must be 'major', 'minor', or 'patch'.")
+
+                # Construct the updated version string
+                updated_version = '.'.join(map(str, version_segments))
+
+                with open(file_path, 'r') as file:
+                    lines = file.readlines()
+                with open(file_path, 'w') as file:
+                    for line in lines:
+                        if "AssemblyVersion" in line or "AssemblyFileVersion" in line:
+                            line = re.sub(r'\d+\.\d+\.\d+\.\d+', updated_version, line)
+                        file.write(line)
+                print()
+                print(f" Updated {plugin} {version_type.capitalize()} version in {category} Assembly info file is {updated_version}")
     except Exception as e:
         print()
-        print(f"Error changing version in AssemblyInfo.cs file: {e}")
+        print(f"Error changing version in AssemblyInfo.cs files: {e}")
         raise
-
 
 
 def change_version_in_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow, version_type):
@@ -651,14 +651,14 @@ def compare_versions(assembly_version, initial_version):
     else:
         return False
 
-def change_version(muRataAppInVSCode, solutionMuRataAppWindow, assemblyInfoFilePath, version_type):
+def change_version(muRataAppInVSCode, solutionMuRataAppWindow, assemblyInfoFilePath, version_type,file_paths_dict_for_plugins_and_actual_assembly_file):
     try:
         initial_version = get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow)
         assembly_version= get_initial_version_from_assembly_info_cs_file(assemblyInfoFilePath)
         
         if compare_versions(assembly_version, initial_version):
              change_version_in_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow, version_type)
-             change_version_in_assembly_info(assemblyInfoFilePath, version_type)
+             change_version_in_assembly_files(file_paths_dict_for_plugins_and_actual_assembly_file, version_type, muRataAppInVSCode, solutionMuRataAppWindow)
         else:
             raise Exception("Versions does not match.")
 
@@ -771,7 +771,47 @@ def main(vsCodePath):
 
         solutionExplorerWindow=muRataAppInVSCode.child_window(title="Solution Explorer", control_type="Window")
         solutionMuRataAppWindow=solutionExplorerWindow.child_window(title_re=".*Solution 'muRata.Applications'.*", control_type="TreeItem")
-
+        #final_assemblyfile_path
+		 # Define the dictionary containing paths for HardwareAccessFramework
+        HardwareAccessFramework = {
+            "AdapterAccess": rf"{base_path}\Apps\AdapterAccess\Properties\AssemblyInfo.cs",
+            "DeviceAccess": rf"{base_path}\Apps\DeviceAccess\Properties\AssemblyInfo.cs",
+            "HardwareInterfaces": rf"{base_path}\Apps\HardwareInterfaces\Properties\AssemblyInfo.cs",
+        }
+        
+        # Define the dictionary containing paths for PluginInterface
+        PluginInterface_file_paths = {
+            "PluginFramework_file_path": rf"{base_path}\Apps\PluginFramework\Properties\AssemblyInfo.cs",
+        }
+        
+        # Define the dictionary containing paths for plugins
+        # Define plugins_file_paths
+        plugins_file_paths = {
+            "AdapterControl": rf"{base_path}\Apps\Plugins\AdapterControl\Properties\AssemblyInfo.cs",
+            "ARC1C0608Control": rf"{base_path}\Apps\Plugins\ARC1C0608Control\Properties\AssemblyInfo.cs",
+            "ARCxCCxxControl": rf"{base_path}\Apps\Plugins\ARCxCCxxControl\Properties\AssemblyInfo.cs",
+            "DocumentViewerControl": rf"{base_path}\Apps\Plugins\DocumentViewerControl\Properties\AssemblyInfo.cs",
+            "HelpViewerControl": rf"{base_path}\Apps\Plugins\HelpViewerControl\Properties\AssemblyInfo.cs",
+            "MPQ7920Control": rf"{base_path}\Apps\Plugins\MPQ7920Control\Properties\AssemblyInfo.cs",
+            "MPQChartControl": rf"{base_path}\Apps\Plugins\MPQChartControl\Properties\AssemblyInfo.cs",
+            "MPQControl": rf"{base_path}\Apps\Plugins\MPQControl\Properties\AssemblyInfo.cs",
+            "PE24103Control": rf"{base_path}\Apps\Plugins\PE24103Control\Properties\AssemblyInfo.cs",
+            "PE24103i2cControl": rf"{base_path}\Apps\Plugins\PE24103i2cControl\Properties\AssemblyInfo.cs",
+            "PE24106Control": rf"{base_path}\Apps\Plugins\PE24106Control\Properties\AssemblyInfo.cs",
+            "PE26100Control": rf"{base_path}\Apps\Plugins\PE26100Control\Properties\AssemblyInfo.cs",
+            "RegisterControl": rf"{base_path}\Apps\Plugins\RegisterControl\Properties\AssemblyInfo.cs",
+            "VADERControl": rf"{base_path}\Apps\Plugins\VADERControl\Properties\AssemblyInfo.cs",
+        }
+        
+        # Define the dictionary containing the path for the main assembly file
+        actual_assemblyfile_path = {
+            "assemblypath": fr"{base_path}\Apps\muRata\Properties\AssemblyInfo.cs",
+        }
+        # Define a dictionary to hold all file path dictionaries
+        file_paths_dict_for_plugins_and_actual_assembly_file = {
+           "Plugins": plugins_file_paths,
+           "AssemblyFile": actual_assemblyfile_path,
+        }
         
         
         
@@ -791,8 +831,8 @@ def main(vsCodePath):
         create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,fileSystemWindow )
 
         
-        change_version(muRataAppInVSCode, solutionMuRataAppWindow, assemblyInfoFilePath, version_type)
-
+        
+        change_version(muRataAppInVSCode, solutionMuRataAppWindow, assemblyInfoFilePath, version_type, file_paths_dict_for_plugins_and_actual_assembly_file)
         muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow)
 
         muRataAppInVSCode.CloseButton.click_input()

@@ -7,6 +7,7 @@ import pyautogui
 import pyperclip
 import re
 import subprocess
+from logger import setup_logger
 
 
 
@@ -33,8 +34,7 @@ def get_base_path_from_user():
     print() 
 
     # Prompt the user to input the base path
-    base_path = input("Enter the Project Path: ")
-
+    base_path = input("Enter the Project Path: ")   
     return base_path
 
 
@@ -48,6 +48,7 @@ def select_version_type_to_increment():
         print() 
 
         selection = input("Enter the number corresponding to your choice: ")
+        print()
         if selection == "1":
             return "major"
         elif selection == "2":
@@ -58,10 +59,10 @@ def select_version_type_to_increment():
             print()
             print("Invalid selection. Please enter a number between 1 and 3.")
             return select_version_type_to_increment()
-            
+
+       
     except Exception as e:
-        print()
-        print(f"Error selecting version type: {e}")
+        logger.error('Error in selecting version type')
         raise
 
 
@@ -71,45 +72,51 @@ def connect_or_open_vscode(vsCodePath, filePath):
     try:
         # Try to connect to an existing instance of Visual Studio Code
         app = Application(backend="uia").connect(path=vsCodePath, timeout=10)
-        print("Connected to the existing instance of Visual Studio Code.")
+        logger.debug('Connected to the existing instance of Visual Studio Code')
         # Activate and focus the window
         app.window().set_focus()
         return app.window()
     except Exception as e:
-        print(f"Error connecting to existing Visual Studio Code instance: {e}")
-        # If connection fails, open a new instance of Visual Studio Code
-        print("Opening a new instance of Visual Studio Code...")
+        logger.debug(f'There is no Visual Studio Code instance existing... {e}')
+        logger.debug('Opening a new instance of Visual Studio Code...')
+
         try:
             subprocess.Popen([vsCodePath, filePath])
-            print("Visual Studio Code opened successfully.")
+            logger.debug('New Visual Studio Code opened successfully')
             # Wait for the new instance to start
             time.sleep(10)  # Adjust the sleep time as needed
             app = Application(backend="uia").connect(path=vsCodePath, timeout=10)
-            print("Connected to the new instance of Visual Studio Code.")
             return app.window()
-        except Exception as ex:
-            print(f"An error occurred while opening Visual Studio Code: {ex}")
+        except Exception as e:
+            logger.critical('An error occurred while opening Visual Studio Code')            
             raise
 
 def open_solution_explorer(muRataAppInVSCode):
-    # Check if Solution Explorer is already open
-    solution_explorer = muRataAppInVSCode.child_window(title="Solution Explorer", control_type="Pane", found_index=0)
-    if solution_explorer.exists():
-        print("Solution Explorer is already open.")
-        solution_explorer.set_focus()
-        return
-    else:
-        # Find the parent menu containing the "View" menu item
-        
-        #Find and click on the "View" menu item
-        view_menu = muRataAppInVSCode.child_window(title="View", control_type="MenuItem")
-        view_menu.click_input()
-        time.sleep(2)
+    try:
+        logger.debug('Opening Solution Explorer window')
+        # Check if Solution Explorer is already open
+        solution_explorer = muRataAppInVSCode.child_window(title="Solution Explorer", control_type="Pane", found_index=0)
+        if solution_explorer.exists():
+            logger.debug('Solution Explorer is already opened')
+            solution_explorer.set_focus()
+            return
+        else:
+            # Find the parent menu containing the "View" menu item
+            
+            #Find and click on the "View" menu item
+            view_menu = muRataAppInVSCode.child_window(title="View", control_type="MenuItem")
+            view_menu.click_input()
+            time.sleep(2)
 
-        # Find and click on the "Solution Explorer" menu item under the "View" menu
-        solution_explorer_menu = muRataAppInVSCode.child_window(title="Solution Explorer", control_type="MenuItem")
-        solution_explorer_menu.click_input()
-        print("Opened Solution Explorer.")
+            # Find and click on the "Solution Explorer" menu item under the "View" menu
+            solution_explorer_menu = muRataAppInVSCode.child_window(title="Solution Explorer", control_type="MenuItem")
+            solution_explorer_menu.click_input()
+            logger.debug('Solution Explorer is Opened')
+    except Exception as e:
+        logger.critical('An error occurred while opening Solution Explorer')            
+        raise
+    
+        
 
 
 def capture_the_result_of_build(muRataAppInVSCode):
@@ -118,19 +125,16 @@ def capture_the_result_of_build(muRataAppInVSCode):
         time.sleep(10)
         customControl=muRataAppInVSCode.Output.Custom
         buildedResult=customControl.child_window(title_re=".*Build started*.", auto_id="WpfTextView", control_type="Edit").window_text()
-        print()
-        print("Output of Build:", buildedResult)
-
+        logger.debug(f'Output of Build: {buildedResult}')
         time.sleep(10)
         if "0 failed" in buildedResult:
-            print()
-            print("Build is succeeded")
+            logger.debug('Build is succeeded')
             muRataAppInVSCode.Output.CloseButton.click_input()
         else:
             raise Exception("Build failed. Consider it as an error.")
     except Exception as e:
-        print()
-        print(f"Error in capture the build result : {e}")
+        
+        logger.critical('Error in capture the build result')
         raise
 
 def build_solution(muRataAppInVSCode):
@@ -141,6 +145,7 @@ def build_solution(muRataAppInVSCode):
         ### Click Build solution ###
         pyautogui.press('down')
         pyautogui.press('enter')
+        logger.debug('Build process is started')
         capture_the_result_of_build(muRataAppInVSCode)
 
         # ### Capture the output
@@ -158,8 +163,7 @@ def build_solution(muRataAppInVSCode):
         # else:
         #     raise Exception("Build failed. Consider it as an error.")
     except Exception as e:
-        print()
-        print(f"Error in build solution: {e}")
+        logger.critical('Error in build solution')
         raise
 
 
@@ -169,6 +173,8 @@ def build_process_in_release_mode(muRataAppInVSCode,sourceFolder1, sourceFolder2
         ### Change from Debug to Release Mode ###
         muRataAppInVSCode.solutionConfigurations.select("Release")
 
+        logger.debug('Mode is changed from debug to release')
+
         ### Copy Devices and Plugins folders from Debug to Release ###
 
         if os.path.exists(desinationFolderRelease):
@@ -177,14 +183,15 @@ def build_process_in_release_mode(muRataAppInVSCode,sourceFolder1, sourceFolder2
         # Create destination folder if it does not exist
         os.makedirs(desinationFolderRelease)
         shutil.copytree(sourceFolder1,os.path.join(desinationFolderRelease, os.path.basename(sourceFolder1)))
+        logger.debug(f'All files are copied from {sourceFolder1} to  {desinationFolderRelease}')
         shutil.copytree(sourceFolder2,os.path.join(desinationFolderRelease,os.path.basename(sourceFolder2)))
-
+        logger.debug(f'All files are copied from {sourceFolder1} to  {desinationFolderRelease}')
+        
         ### Build Solution ###
         build_solution(muRataAppInVSCode)
         
     except Exception as e:
-        print()
-        print(f"Error while building solution in release mode: {e}")
+        logger.critical('Error while building solution in release mode')
         raise
         
 
@@ -194,6 +201,7 @@ def update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWin
         solutionMuRataAppWindow.child_window(title="muRataStudioSetup", control_type="TreeItem").click_input()
         time.sleep(5)
         muRataAppInVSCode.child_window(title="&File System", control_type="Button").click_input()
+        logger.debug('File system sditor button is clicked')
 
 	    ###  Delete all the files from Devices of Application Folder and copy from Devices of Release Folder ###
         fileSystemWindow=muRataAppInVSCode.child_window(title="File System (muRataStudioSetup)", auto_id="D:0:0:|File System (muRataStudioSetup)||{00000000-0000-0000-0000-000000000000}|", control_type="Pane")
@@ -204,10 +212,13 @@ def update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWin
         pyautogui.press('delete')
         deleteProcess=muRataAppInVSCode.child_window(title="Microsoft Visual Studio", control_type="Window")
         deleteProcess.YesButton.click_input()
+        logger.debug('All files are deleted from devices folder (File System on Targer Machine-> Application Folder->Devices)')
+
 
         explorer=Application(backend="uia").start("explorer.exe")
         fileExplorer = Desktop(backend="uia").window(title='File Explorer')
         fileExplorer.wait('ready', timeout=10)
+        logger.debug('File Explorer is Opened')
 
         addressBar=fileExplorer.child_window(title="Address: Quick access", auto_id="1001", control_type="ToolBar")
         addressBar.click_input()
@@ -217,10 +228,13 @@ def update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWin
         time.sleep(10)
         pyautogui.hotkey('ctrl', 'a')
         pyautogui.hotkey('ctrl', 'c')
+        logger.debug('All files are copied from devicesFolderOfRelease')
     
         
         muRataAppInVSCode.set_focus()
         pyautogui.hotkey('ctrl', 'v')
+        logger.debug('All files are pasted to devices folder (File System on Targer Machine-> Application Folder->Devices) ')
+        
 
 
         ### Delete all the files from Plugins of Application Folder and copy from Plugins of Release Folder ###
@@ -229,6 +243,8 @@ def update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWin
         pyautogui.press('delete')
         deleteProcess=muRataAppInVSCode.child_window(title="Microsoft Visual Studio", control_type="Window")
         deleteProcess.YesButton.click_input()
+        logger.debug('All files are deleted from plugins folder (File System on Targer Machine-> Application Folder->Plugins)')
+        
 
         # pyautogui.hotkey('ctrl', 'v')
         time.sleep(1)
@@ -236,6 +252,7 @@ def update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWin
         fileExplorer = Desktop(backend="uia").window(title='File Explorer')
         fileExplorer.wait('ready', timeout=10)
         time.sleep(5)
+        logger.debug('File Explorer is Opened')
         addressBar=fileExplorer.child_window(title="Address: Quick access", auto_id="1001", control_type="ToolBar")
         addressBar.click_input()
 
@@ -244,13 +261,14 @@ def update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWin
         time.sleep(5)
         pyautogui.hotkey('ctrl', 'a')
         pyautogui.hotkey('ctrl', 'c')
+        logger.debug('All files are copied from pluginsFolderOfRelease')
         muRataAppInVSCode.set_focus()
         pyautogui.hotkey('ctrl', 'v')
+        logger.debug('All files are pasted to plugins folder (File System on Targer Machine-> Application Folder->Plugins)')
 
 
     except Exception as e:
-        print()
-        print(f"Error occurred while updating folders of Application Folder: {e}")
+        logger.critical('Error occurred while updating folders of Application Folder')
         raise
 
 
@@ -261,16 +279,21 @@ def delete_primary_output_and_shortcuts(fileSystemWindow,muRataAppInVSCode,appli
         applicationFolder.double_click_input()
         fileSystemWindow.child_window(title="Primary output from muRata (Active)", control_type="Edit").click_input()
         pyautogui.press('delete')
+        logger.debug('Deleted Primary Output from Murata (File System on Targer Machine-> Application Folder)')
 
         ### Delete muRata Studio shortcut from Application folder ###
         muRataAppInVSCode.child_window(title="muRata Studio", control_type="ListItem").click_input()
         pyautogui.press('delete')
+        logger.debug('Deleted muRata Studio shortcut from Murata (File System on Targer Machine-> Application Folder)')
+
 
         ###  Delete muRata Studio shortcut from User's Desktop ###
         usersDesktop=fileSystemWindow.child_window(title="User's Desktop", control_type="TreeItem")
         usersDesktop.double_click_input()
         muRataAppInVSCode.child_window(title="muRata Studio", control_type="ListItem").click_input()
         pyautogui.press('delete')
+        logger.debug("Deleted muRata Studio shortcut from Murata (File System on Targer Machine-> User's Desktop)")
+
 
         ### Delete muRata Studio shortcut from User's Program Menu->muRata corporation ->muRata Studio ###
         usersProgramsMenu=fileSystemWindow.child_window(title="User's Programs Menu", control_type="TreeItem")
@@ -279,10 +302,11 @@ def delete_primary_output_and_shortcuts(fileSystemWindow,muRataAppInVSCode,appli
         usersProgramsMenu.MuRataCorporation.MuRataStudio.double_click_input()
         muRataAppInVSCode.child_window(title="muRata Studio", control_type="ListItem").click_input()
         pyautogui.press('delete')
+        logger.debug("Deleted muRata Studio shortcut from Murata (File System on Targer Machine->User's Program Menu->muRata corporation)")
+
 
     except Exception as e:
-        print()
-        print(f"Error deleting primary output and shortcuts: {e}")
+        logger.critical('Error while deleting primary output and shortcuts')
         raise
 
 
@@ -325,10 +349,10 @@ def create_primary_output_from_muRata(muRataAppInVSCode,applicationFolder):
 
         time.sleep(1)
         addProjectOutputGroup.OKButton.click_input()
+        logger.debug('Created primary output from muRata')
         
     except Exception as e:
-        print()
-        print(f"Error in creating primary output from muRata: {e}")
+        logger.critical('Error in creating primary output from muRata')
         raise
 
 
@@ -336,8 +360,6 @@ def create_muRata_shortcut(applicationFolder, fileSystemWindow, muRataAppInVSCod
     try:
         applicationFolder.double_click_input()
         primaryOutputFromMuRataActive=fileSystemWindow.child_window(title="Primary output from muRata (Active)", control_type="Edit")
-
-
 
         primaryOutputFromMuRataActive.right_click_input()
 
@@ -389,11 +411,11 @@ def create_muRata_shortcut(applicationFolder, fileSystemWindow, muRataAppInVSCod
         iconWindow.OKButton.click_input()
 
 
-        properties.CloseButton.click_input()    
+        properties.CloseButton.click_input()  
+        logger.debug('Created muRata shortcut with name as muRata and selected icon as muRata.ico')  
 
     except Exception as e:
-        print()
-        print(f"Error in creating muRata shortcut: {e}")
+        logger.critical('Error in creating muRata shortcut')
         raise
 
 def create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,fileSystemWindow ):
@@ -401,12 +423,13 @@ def create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,file
         create_primary_output_from_muRata(muRataAppInVSCode,applicationFolder)
         create_muRata_shortcut(applicationFolder, fileSystemWindow, muRataAppInVSCode)
 
-        ## Copy file from Application Folder to User's Desktop
+        ## Move file from Application Folder to User's Desktop
         muRataAppInVSCode.child_window(title="muRata Studio", control_type="Edit").click_input()
         muRataAppInVSCode.type_keys("^x")
         usersDesktop=fileSystemWindow.child_window(title="User's Desktop", control_type="TreeItem")
         usersDesktop.double_click_input()
         muRataAppInVSCode.type_keys("^v")
+        logger.debug("Moved muRata Studio shortcut file from Application folder to User's Desktop")
 
         create_muRata_shortcut(applicationFolder, fileSystemWindow, muRataAppInVSCode)
 
@@ -418,14 +441,14 @@ def create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,file
         # usersProgramsMenu.MuRataCorporation.double_click_input()
         usersProgramsMenu.MuRataCorporation.MuRataStudio.double_click_input()
         muRataAppInVSCode.type_keys("^v")
+        logger.debug("Moved muRata Studio shortcut file from Application folder to User's Programs Menu->MuRataCorporation-> muRataStudio")
 
         create_muRata_shortcut(applicationFolder, fileSystemWindow, muRataAppInVSCode)
 
     
         
     except Exception as e:
-        print()
-        print(f"Error creating primary output and shortcuts: {e}")
+        logger.critical('Error creating primary output and shortcuts')
         raise
 
 
@@ -682,13 +705,12 @@ def install_muRata_studio_setup(solutionMuRataAppWindow, solutionExplorerWindow)
 
             muRataStudioInstallationWindow.CloseButton2.click_input()
             response=message.split('.', 1)[0].strip() + "." 
-            print()
-            print(response)
+            logger.debug(response)
         else:
              raise Exception("Erro in the Installation of muRata Studio")
     except Exception as e:
-        print()
-        print(f"Error installing muRata Studio setup: {e}")
+       logger.critical('Error in installing muRata Studio setup')
+   
 
 def build_muRata_studio_Setup(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow):
     try:
@@ -698,11 +720,12 @@ def build_muRata_studio_Setup(muRataAppInVSCode, solutionMuRataAppWindow, soluti
         pyautogui.press("down")
         time.sleep(0.3)
         pyautogui.press("enter")
+        logger.debug('Build muRata Studio Setup project is started ')
         capture_the_result_of_build(muRataAppInVSCode)
+        logger.debug('Build muRata Studio Setup project is completed')
 
     except Exception as e:
-        print()
-        print(f"Error in building muRataStudio Setup: {e}")
+        logger.critical('Error in building muRataStudio Setup')
         raise
 
 def muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow):
@@ -712,13 +735,15 @@ def muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow
         install_muRata_studio_setup(solutionMuRataAppWindow, solutionExplorerWindow, )
 
     except Exception as e:
-        print()
-        print(f"Error in muRataStudio installer packaging: {e}")
+        logger.critical('Error in muRataStudio installer packaging')
         raise
 
 def main(vsCodePath):
 
     try:
+
+        logger.info('Initial Message of Packaging Process !!!')
+
         ###  Get Project Location Path
         base_path = get_base_path_from_user()
         # Construct the full paths using the provided base path
@@ -733,21 +758,23 @@ def main(vsCodePath):
         ### Get Version Type
         version_type=select_version_type_to_increment()
 
-        print()
-        print("Packaging Process is Started")
+        logger.debug(f'Project Folder is, {base_path}')
+        logger.debug(f'Version Type is {version_type}')
+
+        logger.info('Packaging Process is Started')
 
         
         muRataAppInVSCode = connect_or_open_vscode(vsCodePath, filePath)
         time.sleep(10)
 
+        open_solution_explorer(muRataAppInVSCode)
 
         solutionExplorerWindow=muRataAppInVSCode.child_window(title="Solution Explorer", control_type="Window")
-        # solutionExplorerWindow=muRataAppInVSCode.child_window(title="Solution Explorer", auto_id="SolutionExplorer", control_type="Tree")
         solutionMuRataAppWindow=solutionExplorerWindow.child_window(title_re=".*Solution 'muRata.Applications'.*", control_type="TreeItem")
 
         
         
-        open_solution_explorer(muRataAppInVSCode)
+        
         build_process_in_release_mode(muRataAppInVSCode,sourceFolder1, sourceFolder2, desinationFolderRelease)
         update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWindow, devicesFolderOfRelease, pluginsFolderOfRelease)
 
@@ -770,20 +797,17 @@ def main(vsCodePath):
 
         muRataAppInVSCode.CloseButton.click_input()
         devicesWindowInfileExplorer = Desktop(backend="uia").window(title='Devices')
+        logger.debug('Visual Studio Code is closed')
         devicesWindowInfileExplorer.set_focus()
         devicesWindowInfileExplorer.CloseButton.click_input()
         pluginsWindowInfileExplorer = Desktop(backend="uia").window(title='Devices')
         pluginsWindowInfileExplorer.set_focus()
         pluginsWindowInfileExplorer.CloseButton.click_input()
-
-
-
-    
+   
 
 
     except Exception as e:
-            print()
-            print(f"An error occurred: {e}")
+            logger.critical('f"An error occurred: {e}"')
             # fileExplorer.set_focus()
             # fileExplorer.close_file_explorer()
             # muRataAppInVSCode.set_focus()
@@ -793,6 +817,9 @@ def main(vsCodePath):
 
 
 if __name__=="__main__":
+
+     # Set up logging
+    logger = setup_logger('psemi_packagaing_automation.log')
 
     ### Delcare VScode path and File Path ###
     vsCodePath=r"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe"

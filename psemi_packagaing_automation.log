@@ -1,0 +1,48 @@
+2024-04-23 17:35:42,227 - DEBUG - Project Folder is C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio
+2024-04-23 17:50:21,859 - DEBUG - Initial Message of Packaging Process
+2024-04-23 17:50:57,237 - DEBUG - Project Folder is, C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio
+2024-04-23 17:50:57,238 - DEBUG - Version Type is minor
+2024-04-23 17:50:57,239 - DEBUG - "Packaging Process is Started
+2024-04-23 17:54:25,821 - INFO - Initial Message of Packaging Process
+2024-04-23 17:54:34,083 - DEBUG - Project Folder is, C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio
+2024-04-23 17:54:34,088 - DEBUG - Version Type is major
+2024-04-23 17:54:34,089 - DEBUG - "Packaging Process is Started
+2024-04-23 17:55:48,096 - INFO - Initial Message of Packaging Process
+2024-04-23 17:55:58,125 - DEBUG - Project Folder is, C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio
+2024-04-23 17:55:58,127 - DEBUG - Version Type is major
+2024-04-23 17:55:58,128 - DEBUG - "Packaging Process is Started
+2024-04-23 17:56:59,968 - INFO - Initial Message of Packaging Process !!!
+2024-04-23 17:57:13,648 - DEBUG - Project Folder is, C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio
+2024-04-23 17:57:13,649 - DEBUG - Version Type is patch
+2024-04-23 17:57:13,650 - DEBUG - "Packaging Process is Started
+2024-04-23 18:13:48,115 - INFO - Initial Message of Packaging Process !!!
+2024-04-23 18:14:06,916 - DEBUG - Project Folder is, C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio
+2024-04-23 18:14:06,918 - DEBUG - Version Type is major
+2024-04-23 18:14:06,919 - DEBUG - Packaging Process is Started
+2024-04-23 18:14:07,248 - DEBUG - Connected to the existing instance of Visual Studio Code
+2024-04-23 18:14:20,762 - DEBUG - Solution Explorer is Opened
+2024-04-23 18:15:51,783 - INFO - Initial Message of Packaging Process !!!
+2024-04-23 18:15:58,022 - DEBUG - Project Folder is, C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio
+2024-04-23 18:15:58,024 - DEBUG - Version Type is minor
+2024-04-23 18:15:58,025 - DEBUG - Packaging Process is Started
+2024-04-23 18:15:58,302 - DEBUG - Connected to the existing instance of Visual Studio Code
+2024-04-23 18:16:08,357 - DEBUG - Opening Solution Explorer window
+2024-04-23 18:16:08,726 - DEBUG - Solution Explorer is already opened
+2024-04-23 18:17:23,054 - INFO - Initial Message of Packaging Process !!!
+2024-04-23 18:17:33,254 - DEBUG - Project Folder is, C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio
+2024-04-23 18:17:33,256 - DEBUG - Version Type is minor
+2024-04-23 18:17:33,257 - DEBUG - Packaging Process is Started
+2024-04-23 18:17:43,282 - DEBUG - There is no Visual Studio Code instance existing,Process "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe" not found!
+2024-04-23 18:17:43,283 - DEBUG - Opening a new instance of Visual Studio Code...
+2024-04-23 18:17:43,411 - DEBUG - New Visual Studio Code opened successfully
+2024-04-23 18:18:03,829 - DEBUG - Opening Solution Explorer window
+2024-04-23 18:18:04,245 - DEBUG - Solution Explorer is already opened
+2024-04-23 18:19:46,511 - INFO - Initial Message of Packaging Process !!!
+2024-04-23 18:19:52,895 - DEBUG - Project Folder is, C:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio
+2024-04-23 18:19:52,897 - DEBUG - Version Type is major
+2024-04-23 18:19:52,897 - DEBUG - Packaging Process is Started
+2024-04-23 18:20:02,953 - DEBUG - There is no Visual Studio Code instance existing... Process "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe" not found!
+2024-04-23 18:20:02,953 - DEBUG - Opening a new instance of Visual Studio Code...
+2024-04-23 18:20:03,035 - DEBUG - New Visual Studio Code opened successfully
+2024-04-23 18:20:23,485 - DEBUG - Opening Solution Explorer window
+2024-04-23 18:20:26,862 - DEBUG - Solution Explorer is Opened

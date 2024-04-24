@@ -456,7 +456,7 @@ def get_initial_version_from_assembly_info_cs_file(assemblyInfoFilePath):
         raise
     
 
-def change_version_in_assembly_files(file_paths_dict, version_type, muRataAppInVSCode, solutionMuRataAppWindow):
+def change_version_in_assembly_files(file_paths_dict_for_plugins_and_actual_assembly_file, version_type, muRataAppInVSCode, solutionMuRataAppWindow):
     """
     Updates the version number in the specified files.
 
@@ -465,7 +465,7 @@ def change_version_in_assembly_files(file_paths_dict, version_type, muRataAppInV
         version_type: The type of version to update ("major", "minor", or "patch").
     """
     try:
-        for category, paths in file_paths_dict.items():
+        for category, paths in file_paths_dict_for_plugins_and_actual_assembly_file.items():
             for plugin, file_path in paths.items():
                 Assemblyinfo_FileVersion = get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow)
 

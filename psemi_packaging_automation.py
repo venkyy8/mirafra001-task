@@ -11,13 +11,6 @@ from logger import setup_logger
 
 
 
-def copy_all_files_in_a_folder():
-        pyautogui.hotkey('ctrl', 'a')
-        pyautogui.hotkey('ctrl', 'c')   
-
-def delete_all_files_in_a_folder():
-        pyautogui.hotkey('ctrl', 'a')
-        pyautogui.press('delete') 
         
 
 def get_base_path_from_user():
@@ -65,7 +58,46 @@ def select_version_type_to_increment():
         logger.error('Error in selecting version type')
         raise
 
+def increment_main_project_version(assembly_file_paths, initial_version):
+    try:
+        print(f"Your Initial Version is: {initial_version}")
+        print("Note: We read this version from", assembly_file_paths["mainProject"]["assemblyFilePath"])
 
+        change_version = input("Do You want to increment version in main project? (y/n): ")
+
+        if change_version.lower() == "y":
+            print("Which version you want to change in major project?")
+            print("1. Major version (e.g., 0.55.2 -> 1.0.0)")
+            print("2. Minor version (e.g., 0.55.2 -> 0.56.0)")
+            print("3. Patch version (e.g., 0.55.2 -> 0.55.3)")
+            version_type = input("Enter the number corresponding to your choice: ")
+
+            if version_type == "1":
+                print("Note: This version increment will happen in muratastudio properties and in", assembly_file_paths["mainProject"]["assemblyFilePath"], "and in 14 assembly files under Plugins subproject")
+                return True, "major"
+            elif version_type == "2":
+                print("Note: This version increment will happen in muratastudio properties and in", assembly_file_paths["mainProject"]["assemblyFilePath"], "and in 14 assembly files under Plugins subproject")
+                return True, "minor"
+            elif version_type == "3":
+                print("Note: This version increment will happen in muratastudio properties and in", assembly_file_paths["mainProject"]["assemblyFilePath"], "and in 14 assembly files under Plugins subproject")
+                return True, "patch"
+            else:
+                print("Invalid selection. Please enter a number between 1 and 3.")
+
+        return False, None
+    except Exception as e:
+        raise
+       
+        
+
+
+def copy_all_files_in_a_folder():
+        pyautogui.hotkey('ctrl', 'a')
+        pyautogui.hotkey('ctrl', 'c')   
+
+def delete_all_files_in_a_folder():
+        pyautogui.hotkey('ctrl', 'a')
+        pyautogui.press('delete') 
 
 
 def connect_or_open_vscode(vsCodePath, filePath):
@@ -755,94 +787,170 @@ def main(vsCodePath):
         assemblyInfoFilePath = fr"{base_path}\Apps\muRata\Properties\AssemblyInfo.cs"
         filePath = fr"{base_path}\Solutions\muRata.Applications\muRata.Applications.sln"
 
-        ### Get Version Type
-        version_type=select_version_type_to_increment()
+        assembly_file_paths = {
+                    "mainProject": {
+                        "assemblyFilePath": rf"{base_path}\Apps\muRata\Properties\AssemblyInfo.cs"
+            },
+            "subProject": {
+            "hardwareAccessFrameWork": {
+            "adapterAccess": {
+            "assemblyFilePath": rf"{base_path}\Apps\AdapterAccess\Properties\AssemblyInfo.cs"
+            },
+            "deviceAccess": {
+            "assemblyFilePath": rf"{base_path}\Apps\DeviceAccess\Properties\AssemblyInfo.cs"
+            },
+            "hardwareInterfaces": {
+            "assemblyFilePath": rf"{base_path}\Apps\HardwareInterfaces\Properties\AssemblyInfo.cs"
+            }
+            },
+            "PluginInterface": {
+            "PluginFramework": {
+            "assemblyFilePath": rf"{base_path}\Apps\PluginFramework\Properties\AssemblyInfo.cs"
+            }
+            },
+            "Plugins": {
+            "AdapterControl": {
+            "assemblyFilePath": rf"{base_path}\Apps\Plugins\AdapterControl\Properties\AssemblyInfo.cs"
+            },
+            "ARC1C0608Control": {
+            "assemblyFilePath": rf"{base_path}\Apps\Plugins\ARC1C0608Control\Properties\AssemblyInfo.cs"
+            },
+            "ARCxCCxxControl": {
+            "assemblyFilePath": rf"{base_path}\Apps\Plugins\ARCxCCxxControl\Properties\AssemblyInfo.cs"
+            },
+            "DocumentViewerControl": {
+            "assemblyFilePath": rf"{base_path}\Apps\Plugins\DocumentViewerControl\Properties\AssemblyInfo.cs"
+            },
+            "HelpViewerControl": {
+            "assemblyFilePath": rf"{base_path}\Apps\Plugins\HelpViewerControl\Properties\AssemblyInfo.cs"
+            },
+            "MPQ7920Control": {
+            "assemblyFilePath": rf"{base_path}\Apps\Plugins\MPQ7920Control\Properties\AssemblyInfo.cs"
+            },
+            "MPQChartControl": {
+            "assemblyFilePath": rf"{base_path}\Apps\Plugins\MPQChartControl\Properties\AssemblyInfo.cs"
+            },
+            "MPQControl": {
+            "assemblyFilePath": rf"{base_path}\Apps\Plugins\MPQControl\Properties\AssemblyInfo.cs"
+            },
+            "PE24103Control": {
+            "assemblyFilePath": rf"{base_path}\Apps\Plugins\PE24103Control\Properties\AssemblyInfo.cs"
+            },
+            "PE24103i2cControl": {
+            "assemblyFilePath": rf"{base_path}\Apps\Plugins\PE24103i2cControl\Properties\AssemblyInfo.cs"
+            },
+            "PE24106Control": {
+            "assemblyFilePath": rf"{base_path}\Apps\Plugins\PE24106Control\Properties\AssemblyInfo.cs"
+            },
+            "PE26100Control": {
+            "assemblyFilePath": rf"{base_path}\Apps\Plugins\PE26100Control\Properties\AssemblyInfo.cs"
+            },
+            "RegisterControl": {
+            "assemblyFilePath": rf"{base_path}\Apps\Plugins\RegisterControl\Properties\AssemblyInfo.cs"
+            },
+            "VADERControl": {
+            "assemblyFilePath": rf"{base_path}\Apps\Plugins\VADERControl\Properties\AssemblyInfo.cs"
+            }
+            }
+            }
+            }
+        initialVersion="0.55.3"
+        isChangeVersion, main_project_version_type = increment_main_project_version(assembly_file_paths, initialVersion )
+        
+        if isChangeVersion:
+            logger.debug(f'Version Type to increment in Major Project is,{main_project_version_type}')
+            
+    
 
-        logger.debug(f'Project Folder is, {base_path}')
-        logger.debug(f'Version Type is {version_type}')
 
-        logger.info('Packaging Process is Started')
+        # ### Get Version Type
+        # version_type=select_version_type_to_increment()
+
+        # logger.debug(f'Project Folder is, {base_path}')
+        # logger.debug(f'Version Type is {version_type}')
+
+        # logger.info('Packaging Process is Started')
 
         
-        muRataAppInVSCode = connect_or_open_vscode(vsCodePath, filePath)
-        time.sleep(10)
+        # muRataAppInVSCode = connect_or_open_vscode(vsCodePath, filePath)
+        # time.sleep(10)
 
-        open_solution_explorer(muRataAppInVSCode)
+        # open_solution_explorer(muRataAppInVSCode)
 
-        solutionExplorerWindow=muRataAppInVSCode.child_window(title="Solution Explorer", control_type="Window")
-        solutionMuRataAppWindow=solutionExplorerWindow.child_window(title_re=".*Solution 'muRata.Applications'.*", control_type="TreeItem")
-        #final_assemblyfile_path
-		 # Define the dictionary containing paths for HardwareAccessFramework
-        HardwareAccessFramework = {
-            "AdapterAccess": rf"{base_path}\Apps\AdapterAccess\Properties\AssemblyInfo.cs",
-            "DeviceAccess": rf"{base_path}\Apps\DeviceAccess\Properties\AssemblyInfo.cs",
-            "HardwareInterfaces": rf"{base_path}\Apps\HardwareInterfaces\Properties\AssemblyInfo.cs",
-        }
+        # solutionExplorerWindow=muRataAppInVSCode.child_window(title="Solution Explorer", control_type="Window")
+        # solutionMuRataAppWindow=solutionExplorerWindow.child_window(title_re=".*Solution 'muRata.Applications'.*", control_type="TreeItem")
+        # #final_assemblyfile_path
+		#  # Define the dictionary containing paths for HardwareAccessFramework
+        # HardwareAccessFramework = {
+        #     "AdapterAccess": rf"{base_path}\Apps\AdapterAccess\Properties\AssemblyInfo.cs",
+        #     "DeviceAccess": rf"{base_path}\Apps\DeviceAccess\Properties\AssemblyInfo.cs",
+        #     "HardwareInterfaces": rf"{base_path}\Apps\HardwareInterfaces\Properties\AssemblyInfo.cs",
+        # }
         
-        # Define the dictionary containing paths for PluginInterface
-        PluginInterface_file_paths = {
-            "PluginFramework_file_path": rf"{base_path}\Apps\PluginFramework\Properties\AssemblyInfo.cs",
-        }
+        # # Define the dictionary containing paths for PluginInterface
+        # PluginInterface_file_paths = {
+        #     "PluginFramework_file_path": rf"{base_path}\Apps\PluginFramework\Properties\AssemblyInfo.cs",
+        # }
         
-        # Define the dictionary containing paths for plugins
-        # Define plugins_file_paths
-        plugins_file_paths = {
-            "AdapterControl": rf"{base_path}\Apps\Plugins\AdapterControl\Properties\AssemblyInfo.cs",
-            "ARC1C0608Control": rf"{base_path}\Apps\Plugins\ARC1C0608Control\Properties\AssemblyInfo.cs",
-            "ARCxCCxxControl": rf"{base_path}\Apps\Plugins\ARCxCCxxControl\Properties\AssemblyInfo.cs",
-            "DocumentViewerControl": rf"{base_path}\Apps\Plugins\DocumentViewerControl\Properties\AssemblyInfo.cs",
-            "HelpViewerControl": rf"{base_path}\Apps\Plugins\HelpViewerControl\Properties\AssemblyInfo.cs",
-            "MPQ7920Control": rf"{base_path}\Apps\Plugins\MPQ7920Control\Properties\AssemblyInfo.cs",
-            "MPQChartControl": rf"{base_path}\Apps\Plugins\MPQChartControl\Properties\AssemblyInfo.cs",
-            "MPQControl": rf"{base_path}\Apps\Plugins\MPQControl\Properties\AssemblyInfo.cs",
-            "PE24103Control": rf"{base_path}\Apps\Plugins\PE24103Control\Properties\AssemblyInfo.cs",
-            "PE24103i2cControl": rf"{base_path}\Apps\Plugins\PE24103i2cControl\Properties\AssemblyInfo.cs",
-            "PE24106Control": rf"{base_path}\Apps\Plugins\PE24106Control\Properties\AssemblyInfo.cs",
-            "PE26100Control": rf"{base_path}\Apps\Plugins\PE26100Control\Properties\AssemblyInfo.cs",
-            "RegisterControl": rf"{base_path}\Apps\Plugins\RegisterControl\Properties\AssemblyInfo.cs",
-            "VADERControl": rf"{base_path}\Apps\Plugins\VADERControl\Properties\AssemblyInfo.cs",
-        }
+        # # Define the dictionary containing paths for plugins
+        # # Define plugins_file_paths
+        # plugins_file_paths = {
+        #     "AdapterControl": rf"{base_path}\Apps\Plugins\AdapterControl\Properties\AssemblyInfo.cs",
+        #     "ARC1C0608Control": rf"{base_path}\Apps\Plugins\ARC1C0608Control\Properties\AssemblyInfo.cs",
+        #     "ARCxCCxxControl": rf"{base_path}\Apps\Plugins\ARCxCCxxControl\Properties\AssemblyInfo.cs",
+        #     "DocumentViewerControl": rf"{base_path}\Apps\Plugins\DocumentViewerControl\Properties\AssemblyInfo.cs",
+        #     "HelpViewerControl": rf"{base_path}\Apps\Plugins\HelpViewerControl\Properties\AssemblyInfo.cs",
+        #     "MPQ7920Control": rf"{base_path}\Apps\Plugins\MPQ7920Control\Properties\AssemblyInfo.cs",
+        #     "MPQChartControl": rf"{base_path}\Apps\Plugins\MPQChartControl\Properties\AssemblyInfo.cs",
+        #     "MPQControl": rf"{base_path}\Apps\Plugins\MPQControl\Properties\AssemblyInfo.cs",
+        #     "PE24103Control": rf"{base_path}\Apps\Plugins\PE24103Control\Properties\AssemblyInfo.cs",
+        #     "PE24103i2cControl": rf"{base_path}\Apps\Plugins\PE24103i2cControl\Properties\AssemblyInfo.cs",
+        #     "PE24106Control": rf"{base_path}\Apps\Plugins\PE24106Control\Properties\AssemblyInfo.cs",
+        #     "PE26100Control": rf"{base_path}\Apps\Plugins\PE26100Control\Properties\AssemblyInfo.cs",
+        #     "RegisterControl": rf"{base_path}\Apps\Plugins\RegisterControl\Properties\AssemblyInfo.cs",
+        #     "VADERControl": rf"{base_path}\Apps\Plugins\VADERControl\Properties\AssemblyInfo.cs",
+        # }
         
-        # Define the dictionary containing the path for the main assembly file
-        actual_assemblyfile_path = {
-            "assemblypath": fr"{base_path}\Apps\muRata\Properties\AssemblyInfo.cs",
-        }
-        # Define a dictionary to hold all file path dictionaries
-        file_paths_dict_for_plugins_and_actual_assembly_file = {
-           "Plugins": plugins_file_paths,
-           "AssemblyFile": actual_assemblyfile_path,
-        }
-        
-        
-        
-        build_process_in_release_mode(muRataAppInVSCode,sourceFolder1, sourceFolder2, desinationFolderRelease)
-        update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWindow, devicesFolderOfRelease, pluginsFolderOfRelease)
-
-        ### Capturing Window
-        fileSystemWindow=muRataAppInVSCode.child_window(title="File System (muRataStudioSetup)", auto_id="D:0:0:|File System (muRataStudioSetup)||{00000000-0000-0000-0000-000000000000}|", control_type="Pane")
-
-        
-
-        ### Capturing Window
-        applicationFolder=fileSystemWindow.child_window(title="Application Folder", control_type="TreeItem")
-
-        delete_primary_output_and_shortcuts(fileSystemWindow,muRataAppInVSCode,applicationFolder)
-
-        create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,fileSystemWindow )
-
+        # # Define the dictionary containing the path for the main assembly file
+        # actual_assemblyfile_path = {
+        #     "assemblypath": fr"{base_path}\Apps\muRata\Properties\AssemblyInfo.cs",
+        # }
+        # # Define a dictionary to hold all file path dictionaries
+        # file_paths_dict_for_plugins_and_actual_assembly_file = {
+        #    "Plugins": plugins_file_paths,
+        #    "AssemblyFile": actual_assemblyfile_path,
+        # }
         
         
-        change_version(muRataAppInVSCode, solutionMuRataAppWindow, assemblyInfoFilePath, version_type, file_paths_dict_for_plugins_and_actual_assembly_file)
-        muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow)
+        
+        # build_process_in_release_mode(muRataAppInVSCode,sourceFolder1, sourceFolder2, desinationFolderRelease)
+        # update_folders_of_application_folder(muRataAppInVSCode, solutionMuRataAppWindow, devicesFolderOfRelease, pluginsFolderOfRelease)
 
-        muRataAppInVSCode.CloseButton.click_input()
-        devicesWindowInfileExplorer = Desktop(backend="uia").window(title='Devices')
-        logger.debug('Visual Studio Code is closed')
-        devicesWindowInfileExplorer.set_focus()
-        devicesWindowInfileExplorer.CloseButton.click_input()
-        pluginsWindowInfileExplorer = Desktop(backend="uia").window(title='Devices')
-        pluginsWindowInfileExplorer.set_focus()
-        pluginsWindowInfileExplorer.CloseButton.click_input()
+        # ### Capturing Window
+        # fileSystemWindow=muRataAppInVSCode.child_window(title="File System (muRataStudioSetup)", auto_id="D:0:0:|File System (muRataStudioSetup)||{00000000-0000-0000-0000-000000000000}|", control_type="Pane")
+
+        
+
+        # ### Capturing Window
+        # applicationFolder=fileSystemWindow.child_window(title="Application Folder", control_type="TreeItem")
+
+        # delete_primary_output_and_shortcuts(fileSystemWindow,muRataAppInVSCode,applicationFolder)
+
+        # create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,fileSystemWindow )
+
+        
+        
+        # change_version(muRataAppInVSCode, solutionMuRataAppWindow, assemblyInfoFilePath, version_type, file_paths_dict_for_plugins_and_actual_assembly_file)
+        # muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow)
+
+        # muRataAppInVSCode.CloseButton.click_input()
+        # devicesWindowInfileExplorer = Desktop(backend="uia").window(title='Devices')
+        # logger.debug('Visual Studio Code is closed')
+        # devicesWindowInfileExplorer.set_focus()
+        # devicesWindowInfileExplorer.CloseButton.click_input()
+        # pluginsWindowInfileExplorer = Desktop(backend="uia").window(title='Devices')
+        # pluginsWindowInfileExplorer.set_focus()
+        # pluginsWindowInfileExplorer.CloseButton.click_input()
    
 
 

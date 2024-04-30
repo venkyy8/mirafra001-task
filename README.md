@@ -1,44 +1,39 @@
-import os
-import shutil
-import subprocess
+Steps to Automate Psemi Packaging:
+1. Change from debug to release mode
+2. Copy files from ..\Apps\muRata\bin\Debug\Devices  to  ..\Apps\muRata\bin\Release\Devices
+3. Copy files from ..\Apps\muRata\bin\Debug\Plugins  to  ..\Apps\muRata\bin\Release\Plugins
+4. Build solution in Release mode
+If Build is Succeeded,
+5. Delete all files from devices folder (File System on Targer Machine-> Application Folder->Devices)
+6. Copy files from ..\Apps\muRata\bin\Release\Devices to File System on Targer Machine-> Application Folder->Devices
+7.  Delete all files from plugins folder (File System on Targer Machine-> Application Folder->Plugins)
+8.  Copy files from ..\Apps\muRata\bin\Release\Plugins to File System on Targer Machine-> Application Folder->Plugins
+9. Delete Primary Output from Murata (File System on Targer Machine-> Application Folder)
+10. Delete muRata Studio shortcut from Murata (File System on Targer Machine-> Application Folder)
+11. Delete muRata Studio shortcut from Murata (File System on Targer Machine-> User's Desktop)
+12. Delete muRata Studio shortcut from Murata (File System on Targer Machine->User's Program Menu->muRata corporation)
+13. Create primary output from muRata (By rightclick application folder it done)...Here
+    addProjectOutputGroup = muRata,
+    outputGroups= Primary output, 
+    configurations=(Active),
+14. Create muRata shortcut (from-primary output from muRata) 3 times. Here
+        name=muRata Studio
+        icon=muRata.ico (which was under application folder)    
+ keep one muRata Studio shortcut file in Application folder
+15. Move muRata Studio shortcut file from Application folder to User's Desktop
+16. Move muRata Studio shortcut file from Application folder to User's Programs Menu->MuRataCorporation-> muRataStudio
+if want to  change main project version, 
+    17. Compare version of main project assembly info file and muratastudio project properties and check the upgrade code
+    18. Change version of muratastudio project properties according to the main project version type
+    19. Change version of main project assembly info file according to the main project version type
+    20. Change version of 14 assembly info files under Plugins folder according to the  main project version type
+if want to change any sub-project version,
+according to the input 
+    21. Change version in AdapterAccess of HardwareAccessFramework according to the version type
+    22. Change version in DeviceAccess of HardwareAccessFramework according to the version type
+    23. Change version in HardwareInterfaces of HardwareAccessFramework according to the version type
+    24. Change version in PluginFramework of PluginInterface according to the version type
 
-def move_folders(source_dir, dest_dir):
-    # Check if the source directory exists
-    if not os.path.exists(source_dir):
-        print(f"Source directory '{source_dir}' not found.")
-        return
-
-    # Create the destination directory if it doesn't exist
-    if not os.path.exists(dest_dir):
-        os.makedirs(dest_dir)
-
-    # Move folders from source to destination
-    for item in os.listdir(source_dir):
-        source_item = os.path.join(source_dir, item)
-        dest_item = os.path.join(dest_dir, item)
-        if os.path.isdir(source_item):
-            shutil.move(source_item, dest_item)
-
-def build_vdproj(vdproj_path):
-    # Move folders from Debug to Release
-    move_folders(r"c:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Debug\Devices", r"c:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Release\Devices")
-    move_folders(r"c:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Debug\Plugins", r"c:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Apps\muRata\bin\Release\Plugins")
-
-    # Build the deployment project in Release configuration using devenv
-    devenv_path = r"c:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.com"  # Adjust the path as needed
-    command = [devenv_path, vdproj_path, "/build", "Release"]
-
-    result = subprocess.run(command, capture_output=True)
- # Save the build output to a file
-    with open("build_output.txt", "wb") as f:
-        f.write(result.stdout)
-        f.write(result.stderr)
-
-    if result.returncode == 0:
-        print("Project built successfully in Release mode.")
-    else:
-        print("Build failed. Check the output for errors in 'build_output.txt'.")
-
-if __name__ == "__main__":
-    vdproj_path = r"c:\Users\jeyasri\Downloads\Psemi_packaging_automation\Psemi_2024-0.55.0_D1\muratastudio\Solutions\muRata.Applications\muRataStudioSetup\muRataStudioSetup.vdproj"
-    build_vdproj(vdproj_path)
+25. Build solution
+26. Build Muratastudio setup
+27. Install Muratastudio  (If version is changed means, it automatically uninstall the previous one and install new muratastudio...if we done everything without changing the version means, we want to first uninstall and then want to install it)

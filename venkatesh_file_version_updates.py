@@ -277,16 +277,17 @@ def get_assembly_version(assembly_info_path):
 
     return None  # Return None if AssemblyVersion not found
 
+def prompt_update_sub_projects(sub_projects):
+    """
+    Prompt the user whether they want to update any sub-projects.
 
-def update_specific_sub_projects_version(base_path, version_type):
-    sub_projects = {
-        "AdapterAccess": rf"{base_path}\Apps\AdapterAccess\Properties\AssemblyInfo.cs",
-        "DeviceAccess": rf"{base_path}\Apps\DeviceAccess\Properties\AssemblyInfo.cs",
-        "HardwareInterfaces": rf"{base_path}\Apps\HardwareInterfaces\Properties\AssemblyInfo.cs",
-        "PluginFramework": rf"{base_path}\Apps\PluginFramework\Properties\AssemblyInfo.cs"
-        # Add more sub-projects here if needed
-    }
+    Args:
+        sub_projects (dict): Dictionary containing sub-project names and paths.
 
+    Returns:
+        tuple: A tuple containing a boolean indicating if user wants to update sub-projects,
+               and a list of selected sub-projects to update.
+    """
     print("Do you want to update any sub-projects? (yes/no)")
     update_choice = input("Enter your choice: ").lower().strip()
 
@@ -301,38 +302,34 @@ def update_specific_sub_projects_version(base_path, version_type):
         user_choice = input("Enter your choice: ").lower().replace(" ", "")
 
         if user_choice == "all":
-            for project_name, project_path in sub_projects.items():
-                initial_version = get_initial_versions_of_assembly_file_paths(project_path)
-                if initial_version:
-                    print(f"Initial version of {project_name}: {initial_version[0]}")
-                    new_version = assembly_file_update_version_logic(initial_version[0], version_type)
-                    if new_version:
-                        update_version_in_file(project_path, new_version)
-                else:
-                    print(f"Initial version not found for {project_name} project.")
+            return True, list(sub_projects.values())
         else:
             user_choice = user_choice.split(",")
             selected_projects = []
             for choice in user_choice:
                 if choice.isdigit() and 1 <= int(choice) <= len(sub_projects):
-                    selected_projects.append((list(sub_projects.keys())[int(choice) - 1], list(sub_projects.values())[int(choice) - 1]))
+                    selected_projects.append(list(sub_projects.values())[int(choice) - 1])
                 else:
                     print(f"Invalid choice: {choice}")
 
-            for project_name, project_path in selected_projects:
-                initial_version = get_initial_versions_of_assembly_file_paths(project_path)
-                if initial_version:
-                    print(f"Initial version of {project_name}: {initial_version[0]}")
-                    new_version = assembly_file_update_version_logic(initial_version[0], version_type)
-                    if new_version:
-                        update_version_in_file(project_path, new_version)
-                else:
-                    print(f"Initial version not found for {project_name} project.")
+            return True, selected_projects
     elif update_choice == "no":
         print("No sub-projects will be updated.")
+        return False, []
     else:
         print("Invalid choice. Please enter 'yes' or 'no'.")
+        return False, []
 
+def update_specific_sub_projects_version(base_path, version_type,sub_projects_list):
+    for project_path in sub_projects_list:
+            initial_version = get_initial_versions_of_assembly_file_paths(project_path)
+            if initial_version:
+                print(f"Initial version of {project_path}: {initial_version[0]}")
+                new_version = assembly_file_update_version_logic(initial_version[0], version_type)
+                if new_version:
+                    update_version_in_file(project_path, new_version)
+            else:
+                print(f"Initial version not found for {project_path}.")
 
 
 
@@ -375,7 +372,8 @@ def update_main_assembly_info(assembly_info_path, version_type):
 
 
 
-def update_version(assembly_version, properties_version, version_type, base_path, assembly_info_path, vdproj_path):
+def update_version(assembly_version, properties_version, version_type,base_path,assembly_info_path,vdproj_path,sub_projects_list):
+
     if compare_versions(assembly_version, properties_version):
         major, minor, patch = map(int, properties_version.split("."))
 
@@ -429,7 +427,9 @@ def update_version(assembly_version, properties_version, version_type, base_path
             return
 
         # If both conditions are met, proceed to next steps
-        update_specific_sub_projects_version(base_path, version_type)
+
+        
+        update_specific_sub_projects_version(base_path, version_type,sub_projects_list)
         plugins_related_updation(base_path, version_type)
         update_main_assembly_info(assembly_info_path, version_type)
     else:
@@ -485,14 +485,22 @@ def main():
     
     
     base_path=get_base_path_from_user()
+    sub_projects = {
+        "AdapterAccess": rf"{base_path}\Apps\AdapterAccess\Properties\AssemblyInfo.cs",
+        "DeviceAccess": rf"{base_path}\Apps\DeviceAccess\Properties\AssemblyInfo.cs",
+        "HardwareInterfaces": rf"{base_path}\Apps\HardwareInterfaces\Properties\AssemblyInfo.cs",
+        "PluginFramework": rf"{base_path}\Apps\PluginFramework\Properties\AssemblyInfo.cs"
+        # Add more sub-projects here if needed
+    }
     
+    update_sub_projects, sub_projects_list = prompt_update_sub_projects(sub_projects)
     #update_specific_sub_projects_version(base_path, version_type)
     assembly_version = get_assembly_version(assembly_info_path)
     properties_version = extract_properties_version(vdproj_path)
     
     
-    update_version(assembly_version, properties_version, version_type, base_path,assembly_info_path,vdproj_path)
     
+    update_version(assembly_version, properties_version, version_type, base_path, assembly_info_path, vdproj_path, sub_projects_list)
     
     #install_muRata_studio_setup(msi_path)
 

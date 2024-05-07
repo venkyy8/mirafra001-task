@@ -515,67 +515,91 @@ def assembly_file_update_version_logic(initial_version, version_type):
 
 
 
-def extract_properties_version(vdproj_path):
-    # Regular expression pattern to match the ProductVersion line
-    version_pattern = re.compile(r'\"ProductVersion\" = \"\d+:(\d+\.\d+\.\d+)\"')
+#############################
 
-    # Read the content of the .vdproj file
-    with open(vdproj_path, 'r') as file:
-        for line in file:
-            match = version_pattern.search(line)
-            if match:
-                return match.group(1)  # Return the captured version value
-
-    return None  # Return None if ProductVersion not found
-
-def properties_version_increment_logic(properties_version, version_type):
-    # Split the current version into major, minor, and patch segments
-    major, minor, patch = map(int, properties_version.split('.'))
-    
-    if version_type == 1:  # Increment major version
-        major += 1
-        minor = 0
-        patch = 0
-    elif version_type == 2:  # Increment minor version
-        minor += 1
-        patch = 0
-    elif version_type == 3:  # Increment patch version
-        patch += 1
-    
-    # Return the incremented version
-    return f"{major}.{minor}.{patch}"
-
-def updating_properties_version_in_file(vdproj_path, properties_new_version):
+def get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow ):
 
     try:
-        # Read the content of the .vdproj file
-        with open(vdproj_path, 'r') as file:
-            lines = file.readlines()
+        # Open the Properties window using the F4 key shortcut
+        muRataAppInVSCode.type_keys("{F4}")
 
-        # Regular expression pattern to match the ProductVersion line
-        version_pattern = re.compile(r'(\"ProductVersion\" = \"\d+:)(\d+\.\d+\.\d+)(\")')
+        solutionMuRataAppWindow.child_window(title="muRataStudioSetup", control_type="TreeItem").click_input()
+        time.sleep(2)
 
-        # Update the version in memory
-        updated_lines = []
-        for line in lines:
-            match = version_pattern.search(line)
-            if match:
-                # Replace the old version with the new version
-                updated_lines.append(f"{match.group(1)}{properties_new_version}{match.group(3)}\n")
-            else:
-                updated_lines.append(line)
+        propertiesWindow=muRataAppInVSCode.child_window(title="Properties", control_type="Window")
+        # propertiesWindow=muRataAppInVSCode.child_window(title="Properties Window", control_type="Table")
+        propertiesWindow.child_window(title="Version", control_type="TreeItem").click_input()
+        propertiesWindow.child_window(title="Version",  control_type="Edit").double_click_input()
 
-        # Write the updated content back to the file
-        with open(vdproj_path, 'w') as file:
-            file.writelines(updated_lines)
-        
-        print("Properties version updated successfully.")
-    except FileNotFoundError:
-        print(f"File '{vdproj_path}' not found.")
+        # Copy the selected text to the clipboard
+        pyautogui.hotkey('ctrl', 'c')
+
+        # Wait briefly for the clipboard to update
+        time.sleep(0.5)
+
+        # Retrieve the selected text from the clipboard
+        initialVersion = pyperclip.paste()
+        print()
+        print("Initial Version in MuRata Studio Property is", initialVersion)
+        propertiesWindow.CloseButton.click_input()
+        return initialVersion
+    
     except Exception as e:
-        print(f"An error occurred while updating properties version: {e}")
+        print()
+        print(f"Error occurred while getting initial version from muRata Studio properties: {e}")
+        raise
 
 
+def change_version_in_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow, version_type):
+    try:
+        initial_version = get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow)
+
+        muRataAppInVSCode.type_keys("{F4}")
+
+        solutionMuRataAppWindow.child_window(title="muRataStudioSetup", control_type="TreeItem").click_input()
+        time.sleep(10)
+
+        properties_window = muRataAppInVSCode.child_window(title="Properties", control_type="Window")
+        properties_window.child_window(title="Version", control_type="TreeItem").click_input()
+        properties_window.child_window(title="Version", control_type="Edit").double_click_input()
+
+        major, minor, patch = map(int, initial_version.split("."))
+
+        if version_type == 1 or version_type == "major":  # Major update
+            major += 1
+            minor = 0
+            patch = 0
+        elif version_type == 2 or version_type == "minor":  # Minor update
+            minor += 1
+            patch = 0
+        elif version_type == 3 or version_type == "patch":  # Patch update
+            patch += 1
+        else:
+            print()
+            print("Invalid version type. Must be 1, 2, or 3 for 'major', 'minor', or 'patch' respectively, or their string representations.")
+            return
+
+        new_version = f"{major}.{minor}.{patch}"
+
+        version_edit = properties_window.child_window(title="Version", control_type="Edit")
+        version_edit.type_keys(new_version)
+        print()
+        print(f" Updated {'Major' if version_type == 1 or version_type == 'major' else 'Minor' if version_type == 2 or version_type == 'minor' else 'Patch'} version in MuRata Studio Property is {new_version}")
+        time.sleep(1)
+
+        properties_window.CloseButton.click_input()
+        time.sleep(0.5)
+        muRataAppInVSCode.MicrosoftVisualStudio.YesButton.click_input()
+        time.sleep(1)
+        properties_window.CloseButton.click_input()
+
+    except Exception as e:
+        print()
+        print(f"Error changing version in muRata Studio properties: {e}")
+        raise
+
+
+###########################
 
 
 def compare_versions(assembly_version, properties_version):
@@ -717,7 +741,7 @@ def update_main_assembly_info(assembly_info_path, version_type):
 
 
 
-def update_version(assembly_version, properties_version, version_type,base_path,assembly_info_path,vdproj_path,sub_projects_list):
+def update_version(muRataAppInVSCode,solutionMuRataAppWindow,assembly_version, properties_version, version_type,base_path,assembly_info_path,vdproj_path,sub_projects_list):
 
     if compare_versions(assembly_version, properties_version):
         major, minor, patch = map(int, properties_version.split("."))
@@ -750,8 +774,9 @@ def update_version(assembly_version, properties_version, version_type,base_path,
         print("Upgrade code before updating:", before_updating_MSI_version_upgrade_code)
 
         # Update properties version
-        properties_new_version = properties_version_increment_logic(properties_version, version_type)
-        updating_properties_version_in_file(vdproj_path, properties_new_version)
+        
+        
+        change_version_in_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow, version_type)
         time.sleep(1)
         # Fetch product codes after updating
         after_updating_MSI_version_Product_code = fetch_product_code(vdproj_path)
@@ -940,7 +965,8 @@ def main():
     
     
     
-        update_version(assembly_version, properties_version, version_type, base_path, assembly_info_path, vdproj_path, sub_projects_list)
+        
+        update_version(muRataAppInVSCode,solutionMuRataAppWindow,assembly_version, properties_version, version_type,base_path,assembly_info_path,vdproj_path,sub_projects_list)
         ########################
         
         

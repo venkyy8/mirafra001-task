@@ -31,32 +31,19 @@ def get_base_path_from_user():
     return base_path
 
 
-def select_version_type_to_increment():
-    try:
-        print() 
-        print("Which part of the version number do you want to increment?")
-        print("1. Major version (e.g., 0.55.2 -> 1.55.2)")
-        print("2. Minor version (e.g., 0.55.2 -> 0.56.2)")
-        print("3. Patch version (e.g., 0.55.2 -> 0.55.3)")
-        print() 
 
-        selection = input("Enter the number corresponding to your choice: ")
-        print()
-        if selection == "1":
-            return "major"
-        elif selection == "2":
-            return "minor"
-        elif selection == "3":
-            return "patch"
+def get_version_type():
+    while True:
+        print("Which version type do you want to upgrade?")
+        print("1. Major")
+        print("2. Minor")
+        print("3. Patch")
+        choice = input("Enter the number corresponding to your choice: ")
+
+        if choice in ["1", "2", "3"]:
+            return int(choice)
         else:
-            print()
-            print("Invalid selection. Please enter a number between 1 and 3.")
-            return select_version_type_to_increment()
-
-       
-    except Exception as e:
-        logger.error('Error in selecting version type')
-        raise
+            print("Invalid choice. Please enter 1, 2, or 3 for 'major', 'minor', or 'patch' respectively.")
 
 
 def connect_or_open_vscode(vsCodePath, solution_path):
@@ -433,265 +420,410 @@ def create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,file
         raise
 
 
+########################################
 
-def get_initial_version_from_assembly_info_cs_file(assemblyInfoFilePath):
-    """
-    Reads the initial version from the specified file.
 
-    Args:
-        filepath: The path to the file containing the initial version.
-
-    Returns:
-        The initial version string.
-    """
+def fetch_product_code(vdproj_path):
     try:
-        with open(assemblyInfoFilePath, 'r') as file:
-            lines = file.readlines()
-            for line in lines:
-                if "AssemblyVersion" in line:
-                    version_string = re.search(r'\d+\.\d+\.\d+\.\d+', line)
-                    if version_string:
-                        print()
-                        print("Initial Version in Assembly info.cs file", version_string.group() )
-                        return version_string.group()
-    except Exception as e:
-        print()
-        print(f"Error reading version from assembly_info_cs file: {e}")
-        raise
-    
+        with open(vdproj_path, 'r') as file:
+            content = file.read()
+            # Regular expression pattern to match the ProductCode line
+            product_code_pattern = re.compile(r'"ProductCode" = "8:{(.*?)}"')
+            # Search for ProductCode line
+            match = product_code_pattern.search(content)
+            if match:
+                return match.group(1)  # Return the captured product code value
+            else:
+                print("Product code not found in the file.")
+                return None
+    except FileNotFoundError:
+        print(f"File '{vdproj_path}' not found.")
+        return None
 
-def change_version_in_assembly_files(file_paths_dict_for_plugins_and_actual_assembly_file, version_type, muRataAppInVSCode, solutionMuRataAppWindow):
-    """
-    Updates the version number in the specified files.
-
-    Args:
-        file_paths_dict: A dictionary containing file paths for various files.
-        version_type: The type of version to update ("major", "minor", or "patch").
-    """
+def fetch_upgrade_code(vdproj_path):
     try:
-        for category, paths in file_paths_dict_for_plugins_and_actual_assembly_file.items():
-            for plugin, file_path in paths.items():
-                Assemblyinfo_FileVersion = get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow)
-
-                # Split the initial version into segments
-                version_segments = list(map(int, Assemblyinfo_FileVersion.split('.')))
-
-                # Ensure there are four segments in the version string
-                while len(version_segments) < 4:
-                    version_segments.append(0)
-
-                # Map input to version type if it's an integer
-                if isinstance(version_type, int):
-                    if version_type == 1:  # Major update
-                        version_segments[0] += 1
-                        version_segments[1:] = [0, 0, 0]
-                    elif version_type == 2:  # Minor update
-                        version_segments[1] += 1
-                        version_segments[2:] = [0, 0]
-                    elif version_type == 3:  # Patch update
-                        version_segments[2] += 1
-                        version_segments[3] = 0
-                    else:
-                        raise ValueError("Invalid version type. Must be 1 for 'major', 2 for 'minor', or 3 for 'patch'.")
-                elif version_type == "major":  # Major update
-                    version_segments[0] += 1
-                    version_segments[1:] = [0, 0, 0]
-                elif version_type == "minor":  # Minor update
-                    version_segments[1] += 1
-                    version_segments[2:] = [0, 0]
-                elif version_type == "patch":  # Patch update
-                    version_segments[2] += 1
-                    version_segments[3] = 0
-                else:
-                    raise ValueError("Invalid version type. Must be 'major', 'minor', or 'patch'.")
-
-                # Construct the updated version string
-                updated_version = '.'.join(map(str, version_segments))
-
-                with open(file_path, 'r') as file:
-                    lines = file.readlines()
-                with open(file_path, 'w') as file:
-                    for line in lines:
-                        if "AssemblyVersion" in line or "AssemblyFileVersion" in line:
-                            line = re.sub(r'\d+\.\d+\.\d+\.\d+', updated_version, line)
-                        file.write(line)
-                print()
-                print(f" Updated {plugin} {version_type.capitalize()} version in {category} Assembly info file is {updated_version}")
-    except Exception as e:
-        print()
-        print(f"Error changing version in AssemblyInfo.cs files: {e}")
-        raise
+        with open(vdproj_path, 'r') as file:
+            content = file.read()
+            # Regular expression pattern to match the UpgradeCode line
+            upgrade_code_pattern = re.compile(r'"UpgradeCode" = "8:{(.*?)}"')
+            # Search for UpgradeCode line
+            match = upgrade_code_pattern.search(content)
+            if match:
+                return match.group(1)  # Return the captured upgrade code value
+            else:
+                print("Upgrade code not found in the file.")
+                return None
+    except FileNotFoundError:
+        print(f"File '{vdproj_path}' not found.")
+        return None
 
 
-def change_version_in_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow, version_type):
+def get_initial_versions_of_assembly_file_paths(file_path):
     try:
-        initial_version = get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow)
+        with open(file_path, 'r') as file:
+            content = file.read()
 
-        muRataAppInVSCode.type_keys("{F4}")
+            # Regular expression pattern to match AssemblyVersion and AssemblyFileVersion lines
+            version_pattern = re.compile(r'\[assembly: AssemblyVersion\("(.*?)"\)\]\s*\[assembly: AssemblyFileVersion\("(.*?)"\)\]')
 
-        solutionMuRataAppWindow.child_window(title="muRataStudioSetup", control_type="TreeItem").click_input()
-        time.sleep(10)
+            # Search for AssemblyVersion and AssemblyFileVersion lines
+            match = version_pattern.search(content)
 
-        properties_window = muRataAppInVSCode.child_window(title="Properties", control_type="Window")
-        properties_window.child_window(title="Version", control_type="TreeItem").click_input()
-        properties_window.child_window(title="Version", control_type="Edit").double_click_input()
+            if match:
+                assembly_version = match.group(1)
+                file_version = match.group(2)
+                return assembly_version, file_version
+            else:
+                print("No AssemblyVersion or AssemblyFileVersion found in the file.")
+                return None, None
+    except FileNotFoundError:
+        print(f"File '{file_path}' not found.")
+        return None, None
 
-        major, minor, patch = map(int, initial_version.split("."))
 
-        if version_type == 1 or version_type == "major":  # Major update
-            major += 1
-            minor = 0
-            patch = 0
-        elif version_type == 2 or version_type == "minor":  # Minor update
-            minor += 1
-            patch = 0
-        elif version_type == 3 or version_type == "patch":  # Patch update
-            patch += 1
+
+def assembly_file_update_version_logic(initial_version, version_type):
+    if initial_version and '.' in initial_version:
+        version_parts = initial_version.split(".")
+        if len(version_parts) == 4:
+            major, minor, patch, build = map(int, version_parts)
+            
+            if version_type == 1:  # Major update
+                major += 1
+                minor = 0
+                patch = 0
+                build = 0
+            elif version_type == 2:  # Minor update
+                minor += 1
+                patch = 0
+                build = 0
+            elif version_type == 3:  # Patch update
+                patch += 1
+                build = 0
+            else:
+                print("Invalid version type. Must be 1, 2, or 3 for 'major', 'minor', or 'patch' respectively.")
+                return None
+            
+            new_version = f"{major}.{minor}.{patch}.{build}"
+            return new_version
         else:
-            print()
-            print("Invalid version type. Must be 1, 2, or 3 for 'major', 'minor', or 'patch' respectively, or their string representations.")
-            return
-
-        new_version = f"{major}.{minor}.{patch}"
-
-        version_edit = properties_window.child_window(title="Version", control_type="Edit")
-        version_edit.type_keys(new_version)
-        print()
-        print(f" Updated {'Major' if version_type == 1 or version_type == 'major' else 'Minor' if version_type == 2 or version_type == 'minor' else 'Patch'} version in MuRata Studio Property is {new_version}")
-        time.sleep(1)
-
-        properties_window.CloseButton.click_input()
-        time.sleep(0.5)
-        muRataAppInVSCode.MicrosoftVisualStudio.YesButton.click_input()
-        time.sleep(1)
-        properties_window.CloseButton.click_input()
-
-    except Exception as e:
-        print()
-        print(f"Error changing version in muRata Studio properties: {e}")
-        raise
+            print("Invalid initial version format.")
+            return None
+    else:
+        print("Initial version not found or does not follow the expected format.")
+        return None
 
 
 
+def extract_properties_version(vdproj_path):
+    # Regular expression pattern to match the ProductVersion line
+    version_pattern = re.compile(r'\"ProductVersion\" = \"\d+:(\d+\.\d+\.\d+)\"')
 
-def get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow ):
+    # Read the content of the .vdproj file
+    with open(vdproj_path, 'r') as file:
+        for line in file:
+            match = version_pattern.search(line)
+            if match:
+                return match.group(1)  # Return the captured version value
+
+    return None  # Return None if ProductVersion not found
+
+def properties_version_increment_logic(properties_version, version_type):
+    # Split the current version into major, minor, and patch segments
+    major, minor, patch = map(int, properties_version.split('.'))
+    
+    if version_type == 1:  # Increment major version
+        major += 1
+        minor = 0
+        patch = 0
+    elif version_type == 2:  # Increment minor version
+        minor += 1
+        patch = 0
+    elif version_type == 3:  # Increment patch version
+        patch += 1
+    
+    # Return the incremented version
+    return f"{major}.{minor}.{patch}"
+
+def updating_properties_version_in_file(vdproj_path, properties_new_version):
 
     try:
-        # Open the Properties window using the F4 key shortcut
-        muRataAppInVSCode.type_keys("{F4}")
+        # Read the content of the .vdproj file
+        with open(vdproj_path, 'r') as file:
+            lines = file.readlines()
 
-        solutionMuRataAppWindow.child_window(title="muRataStudioSetup", control_type="TreeItem").click_input()
-        time.sleep(2)
+        # Regular expression pattern to match the ProductVersion line
+        version_pattern = re.compile(r'(\"ProductVersion\" = \"\d+:)(\d+\.\d+\.\d+)(\")')
 
-        propertiesWindow=muRataAppInVSCode.child_window(title="Properties", control_type="Window")
-        # propertiesWindow=muRataAppInVSCode.child_window(title="Properties Window", control_type="Table")
-        propertiesWindow.child_window(title="Version", control_type="TreeItem").click_input()
-        propertiesWindow.child_window(title="Version",  control_type="Edit").double_click_input()
+        # Update the version in memory
+        updated_lines = []
+        for line in lines:
+            match = version_pattern.search(line)
+            if match:
+                # Replace the old version with the new version
+                updated_lines.append(f"{match.group(1)}{properties_new_version}{match.group(3)}\n")
+            else:
+                updated_lines.append(line)
 
-        # Copy the selected text to the clipboard
-        pyautogui.hotkey('ctrl', 'c')
-
-        # Wait briefly for the clipboard to update
-        time.sleep(0.5)
-
-        # Retrieve the selected text from the clipboard
-        initialVersion = pyperclip.paste()
-        print()
-        print("Initial Version in MuRata Studio Property is", initialVersion)
-        propertiesWindow.CloseButton.click_input()
-        return initialVersion
-    
+        # Write the updated content back to the file
+        with open(vdproj_path, 'w') as file:
+            file.writelines(updated_lines)
+        
+        print("Properties version updated successfully.")
+    except FileNotFoundError:
+        print(f"File '{vdproj_path}' not found.")
     except Exception as e:
-        print()
-        print(f"Error occurred while getting initial version from muRata Studio properties: {e}")
-        raise
+        print(f"An error occurred while updating properties version: {e}")
 
 
-def compare_versions(assembly_version, initial_version):
-    """
-    Compare the assembly_version with the initial_version,
-    ignoring the last segment of the assembly_version.
 
-    Args:
-        assembly_version: The version obtained from AssemblyInfo.cs.
-        initial_version: The initial version.
 
-    Returns:
-        True if the versions match, False otherwise.
-    """
+def compare_versions(assembly_version, properties_version):
     # Split the versions into segments
     assembly_segments = assembly_version.split('.')
-    initial_segments = initial_version.split('.')
+    initial_segments = properties_version.split('.')
 
     # Ignore the last segment of the assembly_version
     assembly_segments = assembly_segments[:-1]
 
     # Compare the versions
-    if assembly_segments == initial_segments:
-        return True
+    return assembly_segments == initial_segments
+
+
+
+
+def update_version_in_file(file_path, new_version):
+    try:
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+
+        with open(file_path, 'w') as file:
+            for line in lines:
+                if line.strip().startswith("[assembly: AssemblyVersion("):
+                    line = f'[assembly: AssemblyVersion("{new_version}")]\n'
+                elif line.strip().startswith("[assembly: AssemblyFileVersion("):
+                    line = f'[assembly: AssemblyFileVersion("{new_version}")]\n'
+                file.write(line)
+        print(f"Version updated to {new_version} in {file_path}")
+    except FileNotFoundError:
+        print(f"File '{file_path}' not found.")
+
+
+def get_assembly_version(assembly_info_path):
+    # Regular expression to match AssemblyVersion line not preceded by //
+    version_pattern = re.compile(r'^(?!//).*?\[assembly: AssemblyVersion\("(.*?)"\)\]')
+
+    # Read the AssemblyInfo.cs file
+    with open(assembly_info_path, 'r') as file:
+        for line in file:
+            match = version_pattern.search(line)
+            if match:
+                return match.group(1)  # Return the AssemblyVersion value
+
+    return None  # Return None if AssemblyVersion not found
+
+def prompt_update_sub_projects(sub_projects):
+    """
+    Prompt the user whether they want to update any sub-projects.
+
+    Args:
+        sub_projects (dict): Dictionary containing sub-project names and paths.
+
+    Returns:
+        tuple: A tuple containing a boolean indicating if user wants to update sub-projects,
+               and a list of selected sub-projects to update.
+    """
+    print("Do you want to update any sub-projects? (yes/no)")
+    update_choice = input("Enter your choice: ").lower().strip()
+
+    if update_choice == "yes":
+        print("Which sub-projects do you want to update?")
+        print("Enter the numbers separated by commas (e.g., 1, 2, 3, 4) or 'all' to update all sub-projects.")
+
+        # Print the list of sub-projects
+        for i, (project_name, _) in enumerate(sub_projects.items(), start=1):
+            print(f"{i}. {project_name}")
+
+        user_choice = input("Enter your choice: ").lower().replace(" ", "")
+
+        if user_choice == "all":
+            return True, list(sub_projects.values())
+        else:
+            user_choice = user_choice.split(",")
+            selected_projects = []
+            for choice in user_choice:
+                if choice.isdigit() and 1 <= int(choice) <= len(sub_projects):
+                    selected_projects.append(list(sub_projects.values())[int(choice) - 1])
+                else:
+                    print(f"Invalid choice: {choice}")
+
+            return True, selected_projects
+    elif update_choice == "no":
+        print("No sub-projects will be updated.")
+        return False, []
     else:
-        return False
+        print("Invalid choice. Please enter 'yes' or 'no'.")
+        return False, []
 
-def change_version(muRataAppInVSCode, solutionMuRataAppWindow, assemblyInfoFilePath, version_type,file_paths_dict_for_plugins_and_actual_assembly_file):
-    try:
-        initial_version = get_initial_version_from_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow)
-        assembly_version= get_initial_version_from_assembly_info_cs_file(assemblyInfoFilePath)
-        
-        if compare_versions(assembly_version, initial_version):
-             change_version_in_muRata_studio_properties(muRataAppInVSCode, solutionMuRataAppWindow, version_type)
-             change_version_in_assembly_files(file_paths_dict_for_plugins_and_actual_assembly_file, version_type, muRataAppInVSCode, solutionMuRataAppWindow)
+def update_specific_sub_projects_version(base_path, version_type,sub_projects_list):
+    for project_path in sub_projects_list:
+            initial_version = get_initial_versions_of_assembly_file_paths(project_path)
+            if initial_version:
+                print(f"Initial version of {project_path}: {initial_version[0]}")
+                new_version = assembly_file_update_version_logic(initial_version[0], version_type)
+                if new_version:
+                    update_version_in_file(project_path, new_version)
+            else:
+                print(f"Initial version not found for {project_path}.")
+
+
+
+def plugins_related_updation(base_path, version_type):
+    plugins_file_paths = {
+        "AdapterControl": rf"{base_path}\Apps\Plugins\AdapterControl\Properties\AssemblyInfo.cs",
+        "ARC1C0608Control": rf"{base_path}\Apps\Plugins\ARC1C0608Control\Properties\AssemblyInfo.cs",
+        "ARCxCCxxControl": rf"{base_path}\Apps\Plugins\ARCxCCxxControl\Properties\AssemblyInfo.cs",
+        "DocumentViewerControl": rf"{base_path}\Apps\Plugins\DocumentViewerControl\Properties\AssemblyInfo.cs",
+        "HelpViewerControl": rf"{base_path}\Apps\Plugins\HelpViewerControl\Properties\AssemblyInfo.cs",
+        "MPQ7920Control": rf"{base_path}\Apps\Plugins\MPQ7920Control\Properties\AssemblyInfo.cs",
+        "MPQChartControl": rf"{base_path}\Apps\Plugins\MPQChartControl\Properties\AssemblyInfo.cs",
+        "MPQControl": rf"{base_path}\Apps\Plugins\MPQControl\Properties\AssemblyInfo.cs",
+        "PE24103Control": rf"{base_path}\Apps\Plugins\PE24103Control\Properties\AssemblyInfo.cs",
+        "PE24103i2cControl": rf"{base_path}\Apps\Plugins\PE24103i2cControl\Properties\AssemblyInfo.cs",
+        "PE24106Control": rf"{base_path}\Apps\Plugins\PE24106Control\Properties\AssemblyInfo.cs",
+        "PE26100Control": rf"{base_path}\Apps\Plugins\PE26100Control\Properties\AssemblyInfo.cs",
+        "RegisterControl": rf"{base_path}\Apps\Plugins\RegisterControl\Properties\AssemblyInfo.cs",
+        "VADERControl": rf"{base_path}\Apps\Plugins\VADERControl\Properties\AssemblyInfo.cs",
+    }
+
+    for plugin_name, plugin_path in plugins_file_paths.items():
+        initial_version = get_initial_versions_of_assembly_file_paths(plugin_path)
+        if initial_version:
+            new_version = assembly_file_update_version_logic(initial_version[0], version_type)
+            if new_version:
+                update_version_in_file(plugin_path, new_version)
         else:
-            raise Exception("Versions does not match.")
+            print(f"Initial version not found for {plugin_name} plugin.")
 
-    except Exception as e:
+def update_main_assembly_info(assembly_info_path, version_type):
+    initial_version = get_initial_versions_of_assembly_file_paths(assembly_info_path)
+    if initial_version:
+        new_version = assembly_file_update_version_logic(initial_version[0], version_type)
+        if new_version:
+            update_version_in_file(assembly_info_path, new_version)
+    else:
+        print(f"Initial version not found for AssemblyInfo.cs file at {assembly_info_path}.")
+
+
+
+
+def update_version(assembly_version, properties_version, version_type,base_path,assembly_info_path,vdproj_path,sub_projects_list):
+
+    if compare_versions(assembly_version, properties_version):
+        major, minor, patch = map(int, properties_version.split("."))
+
+        if version_type == 1:  # Major update
+            major += 1
+            minor = 0
+            patch = 0
+        elif version_type == 2:  # Minor update
+            minor += 1
+            patch = 0
+        elif version_type == 3:  # Patch update
+            patch += 1
+        else:
+            print("Invalid version type. Must be 1, 2, or 3 for 'major', 'minor', or 'patch' respectively.")
+            return
+
+        new_version = f"{major}.{minor}.{patch}"
+
+        # Print the updated version
         print()
-        print(f"Error in changing version: {e}")
-        raise
+        print(f"Updated {'Major' if version_type == 1 else 'Minor' if version_type == 2 else 'Patch'} version in MuRata Studio Property is {new_version}")
 
+        # Fetch product codes before updating
+        before_updating_MSI_version_Product_code = fetch_product_code(vdproj_path)
+        print("Product code before updating:", before_updating_MSI_version_Product_code)
 
-def install_muRata_studio_setup(solutionMuRataAppWindow, solutionExplorerWindow):
-    try:
-        solutionExplorerWindow.child_window(title="Collapse All", control_type="Button").click_input()
-        solutionMuRataAppWindow.child_window(title="muRataStudioSetup", control_type="TreeItem").right_click_input()
-        for _ in range(5):
-            pyautogui.press("down")
-        time.sleep(1)
-        pyautogui.press("enter")
-        # fileExplorer=Application(backend="uia").connect(title="muRataStudioSetup")
-        # time.sleep(5)
-        # muRataStudioSetupInFileExplorer=fileExplorer.MuRataStudioSetup
-        # muRataStudioSetupInFileExplorer.Release.double_click_input()
-        # fileExplorer=Application(backend="uia").connect(title="Release")
-        # releaseFolderInFileExplorer=fileExplorer.Release
-        # releaseFolderInFileExplorer.set_focus()
-        # releaseFolderInFileExplorer.child_window(title="muRataStudioSetup",  control_type="ListItem").double_click_input()
+        # Fetch upgrade codes before updating
+        before_updating_MSI_version_upgrade_code = fetch_upgrade_code(vdproj_path)
+        print("Upgrade code before updating:", before_updating_MSI_version_upgrade_code)
 
+        # Update properties version
+        properties_new_version = properties_version_increment_logic(properties_version, version_type)
+        updating_properties_version_in_file(vdproj_path, properties_new_version)
         time.sleep(1)
-        muRataStudioWindow=Application(backend="uia").connect(title="muRata Studio")
-        muRataStudioInstallationWindow=muRataStudioWindow.MuRataStudio
-        muRataStudioInstallationWindow.set_focus()
-        muRataStudioInstallationWindow.child_window(title="Next >", control_type="Button").click_input()
-        time.sleep(1)
-        muRataStudioInstallationWindow.child_window(title="I Agree", control_type="RadioButton").click_input()
-        time.sleep(1)
-        muRataStudioInstallationWindow.child_window(title="Next >",  control_type="Button").click_input()
-        time.sleep(1)
-        muRataStudioInstallationWindow.child_window(title="Next >", control_type="Button").click_input()
-        time.sleep(1)
-        muRataStudioInstallationWindow.child_window(title="Next >", control_type="Button").click_input()
-        time.sleep(10)
-        message='muRata Studio has been successfully installed.\r\n\r\nClick "Close" to exit.'
-        successResponse=muRataStudioInstallationWindow.child_window(title=message,  control_type="Text")
-        if successResponse.exists():
+        # Fetch product codes after updating
+        after_updating_MSI_version_Product_code = fetch_product_code(vdproj_path)
+        print("Product code after updating:", after_updating_MSI_version_Product_code)
 
-            muRataStudioInstallationWindow.CloseButton2.click_input()
-            response=message.split('.', 1)[0].strip() + "." 
-            logger.debug(response)
+        # Fetch upgrade codes after updating
+        after_updating_MSI_version_upgrade_code = fetch_upgrade_code(vdproj_path)
+        print("Upgrade code after updating:", after_updating_MSI_version_upgrade_code)
+
+        # Ensure product codes before and after updating are different
+        if before_updating_MSI_version_Product_code != after_updating_MSI_version_Product_code:
+            # Ensure upgrade codes before and after updating are the same
+            if before_updating_MSI_version_upgrade_code == after_updating_MSI_version_upgrade_code:
+                print("Error: Upgrade codes before and after updating are the same.")
+                return
         else:
-             raise Exception("Erro in the Installation of muRata Studio")
+            print("Error: Product codes before and after updating are the same. Aborting further steps.")
+            return
+
+        # If both conditions are met, proceed to next steps
+
+        
+        update_specific_sub_projects_version(base_path, version_type,sub_projects_list)
+        plugins_related_updation(base_path, version_type)
+        update_main_assembly_info(assembly_info_path, version_type)
+    else:
+        print("Assembly version and properties version are different. No update needed.")
+
+
+
+
+def install_muRata_studio_setup(msi_path):
+    try:
+        # Check if the MSI file exists
+        if not os.path.exists(msi_path):
+            raise FileNotFoundError(f"MSI file not found at: {msi_path}")
+
+        # Launch the MSI installer
+        app = Application().start(cmd_line=f"msiexec /i \"{msi_path}\" /passive")
+
+        # Wait for the installation window to appear
+        muRataStudioInstallationWindow = app.window(title_re="muRata Studio.*")
+
+        # Perform UI actions
+        muRataStudioInstallationWindow.wait('ready', timeout=30)
+        muRataStudioInstallationWindow.Next.click_input()
+        time.sleep(1)
+        muRataStudioInstallationWindow.IAgree.click_input()
+        time.sleep(1)
+        muRataStudioInstallationWindow.Next.click_input()
+        time.sleep(1)
+        muRataStudioInstallationWindow.Next.click_input()
+        time.sleep(1)
+        muRataStudioInstallationWindow.Next.click_input()
+        time.sleep(10)
+
+        # Check for success message
+        successResponse = muRataStudioInstallationWindow.window(title="muRata Studio has been successfully installed.")
+        if successResponse.exists():
+            successResponse.close_click()
+            print("muRata Studio has been successfully installed.")
+        else:
+            raise Exception("Error in the installation of muRata Studio")
+    except FileNotFoundError as e:
+        print('File not found error:', e)
     except Exception as e:
-       logger.critical('Error in installing muRata Studio setup')
-   
+        print('Error in installing muRata Studio setup:', e)
+
+
+
+
+###########################################
 
 def build_muRata_studio_Setup(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow):
     try:
@@ -727,12 +859,14 @@ def main():
          ### Delcare VScode path and File Path ###
         vsCodePath=r"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.exe"
         devEnvPath=r"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\devenv.com"
-    
+        
+        
 
         logger.info('Initial Message of Packaging Process !!!')
 
         ###  Get Project Location Path
         base_path = get_base_path_from_user()
+        update_sub_projects, sub_projects_list = prompt_update_sub_projects(sub_projects)
         # Construct the full paths using the provided base path
         sourceFolder1 = fr"{base_path}\Apps\muRata\bin\Debug\Devices"
         sourceFolder2 = fr"{base_path}\Apps\muRata\bin\Debug\Plugins"
@@ -742,9 +876,20 @@ def main():
         pluginsFolderOfRelease = fr"{base_path}\Apps\muRata\bin\Release\Plugins"
         assemblyInfosolution_path = fr"{base_path}\Apps\muRata\Properties\AssemblyInfo.cs"
         solution_path = fr"{base_path}\Solutions\muRata.Applications\muRata.Applications.sln"
-
+        ###################
+        vdproj_path = fr"{base_path}\Solutions\muRata.Applications\muRataStudioSetup\muRataStudioSetup.vdproj"
+        assembly_info_path = fr"{base_path}\Apps\muRata\Properties\AssemblyInfo.cs"
+        msi_path= fr"{base_path}\Solutions\muRata.Applications\muRataStudioSetup\Release\muRataStudioSetup.msi"
+        sub_projects = {
+        "AdapterAccess": rf"{base_path}\Apps\AdapterAccess\Properties\AssemblyInfo.cs",
+        "DeviceAccess": rf"{base_path}\Apps\DeviceAccess\Properties\AssemblyInfo.cs",
+        "HardwareInterfaces": rf"{base_path}\Apps\HardwareInterfaces\Properties\AssemblyInfo.cs",
+        "PluginFramework": rf"{base_path}\Apps\PluginFramework\Properties\AssemblyInfo.cs"
+        # Add more sub-projects here if needed
+    }
+        ################
         ### Get Version Type
-        version_type=select_version_type_to_increment()
+        version_type = get_version_type()
 
         logger.debug(f'Project Folder is, {base_path}')
         logger.debug(f'Version Type is {version_type}')
@@ -771,48 +916,6 @@ def main():
 
         solutionExplorerWindow=muRataAppInVSCode.child_window(title="Solution Explorer", control_type="Window")
         solutionMuRataAppWindow=solutionExplorerWindow.child_window(title_re=".*Solution 'muRata.Applications'.*", control_type="TreeItem")
-        #final_assemblyfile_path
-		 # Define the dictionary containing paths for HardwareAccessFramework
-        HardwareAccessFramework = {
-            "AdapterAccess": rf"{base_path}\Apps\AdapterAccess\Properties\AssemblyInfo.cs",
-            "DeviceAccess": rf"{base_path}\Apps\DeviceAccess\Properties\AssemblyInfo.cs",
-            "HardwareInterfaces": rf"{base_path}\Apps\HardwareInterfaces\Properties\AssemblyInfo.cs",
-        }
-        
-        # Define the dictionary containing paths for PluginInterface
-        PluginInterface_file_paths = {
-            "PluginFramework_file_path": rf"{base_path}\Apps\PluginFramework\Properties\AssemblyInfo.cs",
-        }
-        
-        # Define the dictionary containing paths for plugins
-        # Define plugins_file_paths
-        plugins_file_paths = {
-            "AdapterControl": rf"{base_path}\Apps\Plugins\AdapterControl\Properties\AssemblyInfo.cs",
-            "ARC1C0608Control": rf"{base_path}\Apps\Plugins\ARC1C0608Control\Properties\AssemblyInfo.cs",
-            "ARCxCCxxControl": rf"{base_path}\Apps\Plugins\ARCxCCxxControl\Properties\AssemblyInfo.cs",
-            "DocumentViewerControl": rf"{base_path}\Apps\Plugins\DocumentViewerControl\Properties\AssemblyInfo.cs",
-            "HelpViewerControl": rf"{base_path}\Apps\Plugins\HelpViewerControl\Properties\AssemblyInfo.cs",
-            "MPQ7920Control": rf"{base_path}\Apps\Plugins\MPQ7920Control\Properties\AssemblyInfo.cs",
-            "MPQChartControl": rf"{base_path}\Apps\Plugins\MPQChartControl\Properties\AssemblyInfo.cs",
-            "MPQControl": rf"{base_path}\Apps\Plugins\MPQControl\Properties\AssemblyInfo.cs",
-            "PE24103Control": rf"{base_path}\Apps\Plugins\PE24103Control\Properties\AssemblyInfo.cs",
-            "PE24103i2cControl": rf"{base_path}\Apps\Plugins\PE24103i2cControl\Properties\AssemblyInfo.cs",
-            "PE24106Control": rf"{base_path}\Apps\Plugins\PE24106Control\Properties\AssemblyInfo.cs",
-            "PE26100Control": rf"{base_path}\Apps\Plugins\PE26100Control\Properties\AssemblyInfo.cs",
-            "RegisterControl": rf"{base_path}\Apps\Plugins\RegisterControl\Properties\AssemblyInfo.cs",
-            "VADERControl": rf"{base_path}\Apps\Plugins\VADERControl\Properties\AssemblyInfo.cs",
-        }
-        
-        # Define the dictionary containing the path for the main assembly file
-        actual_assemblyfile_path = {
-            "assemblypath": fr"{base_path}\Apps\muRata\Properties\AssemblyInfo.cs",
-        }
-        # Define a dictionary to hold all file path dictionaries
-        file_paths_dict_for_plugins_and_actual_assembly_file = {
-           "Plugins": plugins_file_paths,
-           "AssemblyFile": actual_assemblyfile_path,
-        }
-        
         
         
         
@@ -830,9 +933,19 @@ def main():
 
         create_primary_output_and_shortcuts(muRataAppInVSCode,applicationFolder,fileSystemWindow )
 
+        ###################
+        
+        assembly_version = get_assembly_version(assembly_info_path)
+        properties_version = extract_properties_version(vdproj_path)
+    
+    
+    
+        update_version(assembly_version, properties_version, version_type, base_path, assembly_info_path, vdproj_path, sub_projects_list)
+        ########################
         
         
-        change_version(muRataAppInVSCode, solutionMuRataAppWindow, assemblyInfosolution_path, version_type, file_paths_dict_for_plugins_and_actual_assembly_file)
+        
+        install_muRata_studio_setup(msi_path)
         muRata_studio_installer_packaging(muRataAppInVSCode, solutionMuRataAppWindow, solutionExplorerWindow, solution_path,devEnvPath)
 
         muRataAppInVSCode.CloseButton.click_input()
